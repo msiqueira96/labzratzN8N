@@ -1014,9 +1014,12 @@
         let chartDonut = null;
         let chartPie = null;
 
-        const URL_N8N_LISTAR = 'https://n8n.labzratz.tech/webhook/listar-transacoes';
-        const URL_N8N_CADASTRAR = 'https://n8n.labzratz.tech/webhook/cadastrar-transacao';
-        const URL_N8N_UPLOAD = 'https://n8n.labzratz.tech/webhook/upload-danfe';
+        // URLs de listar e cadastrar foram removidas e comentadas para uso futuro
+        // const URL_N8N_LISTAR = '...';
+        // const URL_N8N_CADASTRAR = '...';
+
+        // Esta é a sua única URL ativa no momento (Upload do arquivo DANFE)
+        const URL_N8N_UPLOAD = 'https://webhook.labzratz.tech/webhook/f24a3071-8062-4589-a3bc-7ddbd95e63da';
 
         Chart.defaults.font.family = "'Inter', sans-serif";
         Chart.defaults.color = "#64748b";
@@ -1024,34 +1027,21 @@
         async function carregarDados() {
             document.getElementById('tabelaCorpo').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Carregando dados...</td></tr>';
 
-            try {
-                const response = await fetch(URL_N8N_LISTAR);
-                if (!response.ok) throw new Error('Erro ao conectar ao n8n');
-                const dados = await response.json();
+            // Como não há fluxo de listagem ativo, a tabela e gráficos vão utilizar
+            // estes dados de exemplo abaixo temporariamente.
+            transacoes = [
+                { id: 1, data: '2026-09-01', fornecedor: 'Venda de Balcão', categoria: 'Receita', tipo: 'Entrada', valor: 2500.00 },
+                { id: 2, data: '2026-09-02', fornecedor: 'Fornecedor B', categoria: 'Insumos', tipo: 'Saída', valor: 1200.00 },
+                { id: 3, data: '2026-09-03', fornecedor: 'Contrato A', categoria: 'Receita', tipo: 'Entrada', valor: 4300.00 },
+                { id: 4, data: '2026-09-05', fornecedor: 'Tarifas Bancárias', categoria: 'Despesa', tipo: 'Saída', valor: 350.00 },
+                { id: 5, data: '2026-09-07', fornecedor: 'Material de Consumo', categoria: 'Insumos', tipo: 'Saída', valor: 880.00 },
+                { id: 6, data: '2026-09-08', fornecedor: 'Serviço Prestado', categoria: 'Receita', tipo: 'Entrada', valor: 1800.00 },
+                { id: 7, data: '2026-09-09', fornecedor: 'Energia Elétrica', categoria: 'Despesa Fixa', tipo: 'Saída', valor: 490.00 },
+                { id: 8, data: '2026-09-10', fornecedor: 'Fornecedor C', categoria: 'Insumos', tipo: 'Saída', valor: 1400.00 }
+            ];
 
-                transacoes = dados.map(item => ({
-                    ...item,
-                    valor: parseFloat(item.valor)
-                }));
-
-                popularOpcoesSelectCabecalho();
-                aplicarFiltros();
-            } catch (erro) {
-                // Dados de exemplo caso não conecte ao n8n
-                transacoes = [
-                    { id: 1, data: '2026-09-01', fornecedor: 'Venda de Balcão', categoria: 'Receita', tipo: 'Entrada', valor: 2500.00 },
-                    { id: 2, data: '2026-09-02', fornecedor: 'Fornecedor B', categoria: 'Insumos', tipo: 'Saída', valor: 1200.00 },
-                    { id: 3, data: '2026-09-03', fornecedor: 'Contrato A', categoria: 'Receita', tipo: 'Entrada', valor: 4300.00 },
-                    { id: 4, data: '2026-09-05', fornecedor: 'Tarifas Bancárias', categoria: 'Despesa', tipo: 'Saída', valor: 350.00 },
-                    { id: 5, data: '2026-09-07', fornecedor: 'Material de Consumo', categoria: 'Insumos', tipo: 'Saída', valor: 880.00 },
-                    { id: 6, data: '2026-09-08', fornecedor: 'Serviço Prestado', categoria: 'Receita', tipo: 'Entrada', valor: 1800.00 },
-                    { id: 7, data: '2026-09-09', fornecedor: 'Energia Elétrica', categoria: 'Despesa Fixa', tipo: 'Saída', valor: 490.00 },
-                    { id: 8, data: '2026-09-10', fornecedor: 'Fornecedor C', categoria: 'Insumos', tipo: 'Saída', valor: 1400.00 }
-                ];
-
-                popularOpcoesSelectCabecalho();
-                aplicarFiltros();
-            }
+            popularOpcoesSelectCabecalho();
+            aplicarFiltros();
         }
 
         function popularOpcoesSelectCabecalho() {
@@ -1330,6 +1320,7 @@
             document.getElementById('nomeArquivo').innerText = input.files.length ? input.files[0].name : '';
         }
 
+        // Função ajustada para cadastrar apenas visualmente por enquanto (sem chamar o n8n)
         async function salvarMovimentacao(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSalvarMov');
@@ -1343,25 +1334,17 @@
                 valor: parseFloat(document.getElementById('formValor').value)
             };
 
-            try {
-                const res = await fetch(URL_N8N_CADASTRAR, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (!res.ok) throw new Error();
-            } catch (err) {
-                transacoes.push(payload);
-                popularOpcoesSelectCabecalho();
-                aplicarFiltros();
-            } finally {
-                btn.innerText = 'Salvar Registro'; btn.disabled = false;
-                document.getElementById('formMovimentacao').reset();
-                fecharModal('modalMovimentacao');
-            }
+            // Adiciona a movimentação na tabela visual
+            transacoes.push(payload);
+            popularOpcoesSelectCabecalho();
+            aplicarFiltros();
+
+            btn.innerText = 'Salvar Registro'; btn.disabled = false;
+            document.getElementById('formMovimentacao').reset();
+            fecharModal('modalMovimentacao');
         }
 
-        // Função de envio atualizada para tratar o JSON de resposta (erro de DANFE inválida ou sucesso)
+        // Função de envio do PDF apontando para sua URL ativa
         async function enviarDanfe(e) {
             e.preventDefault();
             const fileInput = document.getElementById('arquivoDanfe');
@@ -1392,11 +1375,11 @@
                 }
 
                 if (!res.ok || data.status === "erro") {
-                    throw new Error(data.mensagem || "Erro ao processar o documento.");
+                    throw new Error(data.mensagem || "Erro ao processar o documento no n8n. Verifique se o workflow está ativo!");
                 }
 
-                alert(data.mensagem || 'DANFE processada e registrada com sucesso!');
-                carregarDados();
+                alert(data.mensagem || 'DANFE processada e enviada ao n8n com sucesso!');
+                carregarDados(); // Recarrega os dados visuais
 
                 document.getElementById('formDanfe').reset();
                 document.getElementById('nomeArquivo').innerText = '';
