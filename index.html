@@ -977,7 +977,7 @@
     <div class="modal-overlay" id="modalDanfe">
         <div class="modal-box">
             <div class="modal-header">
-                <h3>Upload de DANFE (PDF)</h3>
+                <h3>Upload de Documento (PDF ou Imagem)</h3>
                 <button class="close-btn" onclick="fecharModal('modalDanfe')">&times;</button>
             </div>
             <form id="formDanfe" onsubmit="enviarDanfe(event)">
@@ -991,8 +991,7 @@
                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
                         </path>
                     </svg>
-                    <p style="font-size: 13px; font-weight: 600; margin-top: 8px;">Clique para escolher a Nota Fiscal
-                        PDF</p>
+                    <p style="font-size: 13px; font-weight: 600; margin-top: 8px;">Clique para escolher a Nota Fiscal ou Imagem</p>
                     <input type="file" id="arquivoDanfe" accept="application/pdf,image/*" style="display: none;"
                         onchange="atualizarNomeArquivo(this)">
                     <div id="nomeArquivo"
@@ -1014,11 +1013,6 @@
         let chartDonut = null;
         let chartPie = null;
 
-        // URLs de listar e cadastrar foram removidas e comentadas para uso futuro
-        // const URL_N8N_LISTAR = '...';
-        // const URL_N8N_CADASTRAR = '...';
-
-        // Esta é a sua única URL ativa no momento (Upload do arquivo DANFE)
         const URL_N8N_UPLOAD = 'https://webhook.labzratz.tech/webhook-test/f24a3071-8062-4589-a3bc-7ddbd95e63da';
 
         Chart.defaults.font.family = "'Inter', sans-serif";
@@ -1027,8 +1021,6 @@
         async function carregarDados() {
             document.getElementById('tabelaCorpo').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Carregando dados...</td></tr>';
 
-            // Como não há fluxo de listagem ativo, a tabela e gráficos vão utilizar
-            // estes dados de exemplo abaixo temporariamente.
             transacoes = [
                 { id: 1, data: '2026-09-01', fornecedor: 'Venda de Balcão', categoria: 'Receita', tipo: 'Entrada', valor: 2500.00 },
                 { id: 2, data: '2026-09-02', fornecedor: 'Fornecedor B', categoria: 'Insumos', tipo: 'Saída', valor: 1200.00 },
@@ -1320,7 +1312,6 @@
             document.getElementById('nomeArquivo').innerText = input.files.length ? input.files[0].name : '';
         }
 
-        // Função ajustada para cadastrar apenas visualmente por enquanto (sem chamar o n8n)
         async function salvarMovimentacao(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSalvarMov');
@@ -1334,7 +1325,6 @@
                 valor: parseFloat(document.getElementById('formValor').value)
             };
 
-            // Adiciona a movimentação na tabela visual
             transacoes.push(payload);
             popularOpcoesSelectCabecalho();
             aplicarFiltros();
@@ -1344,12 +1334,11 @@
             fecharModal('modalMovimentacao');
         }
 
-        // Função de envio do PDF apontando para sua URL ativa
         async function enviarDanfe(e) {
             e.preventDefault();
             const fileInput = document.getElementById('arquivoDanfe');
             if (!fileInput.files.length) {
-                alert("Por favor, selecione um arquivo PDF.");
+                alert("Por favor, selecione um arquivo PDF ou Imagem.");
                 return;
             }
 
@@ -1378,8 +1367,8 @@
                     throw new Error(data.mensagem || "Erro ao processar o documento no n8n. Verifique se o workflow está ativo!");
                 }
 
-                alert(data.mensagem || 'DANFE processada e enviada ao n8n com sucesso!');
-                carregarDados(); // Recarrega os dados visuais
+                alert(data.mensagem || 'Documento processado e enviado ao n8n com sucesso!');
+                carregarDados();
 
                 document.getElementById('formDanfe').reset();
                 document.getElementById('nomeArquivo').innerText = '';
