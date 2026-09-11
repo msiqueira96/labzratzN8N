@@ -1,42 +1,52 @@
+import https from 'https';
+
 export const config = {
-  api: {
-    bodyParser: false, // Desativa o parser padrão para permitir o envio de arquivos binários (multipart/form-data)
-  },
+  api: { bodyParser: false },
 };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
     return res.status(405).json({ status: 'erro', mensagem: 'Método não permitido' });
   }
 
   try {
-    // Coleta os chunks do arquivo enviado pelo navegador
     const chunks = [];
     for await (const chunk of req) {
       chunks.push(chunk);
     }
     const buffer = Buffer.concat(chunks);
 
-    // URL de produção do seu webhook no n8n
-    const n8nUrl = 'https://webhook.labzratz.tech/webhook-test/f24a3071-8062-4589-a3bc-7ddbd95e63da';
+    const n8nUrl = new URL('https://webhook.labzratz.tech/webhook-test/f24a3071-8062-4589-a3bc-7ddbd95e63da');
 
-    // Repassa a requisição para o n8n mantendo o Content-Type original (com o boundary do arquivo)
-    const response = await fetch(n8nUrl, {
+    const options = {
+      hostname: n8nUrl.hostname,
+      port: 443,
+      path: n8nUrl.pathname,
       method: 'POST',
       headers: {
         'Content-Type': req.headers['content-type'],
+        'Content-Length': buffer.length
       },
-      body: buffer,
+      rejectUnauthorized: false // Ignora o erro de certificado SSL autoassinado/inseguro
+    };
+
+    const n8nReq = https.request(options, (n8nRes) => {
+      let data = '';
+      n8nRes.on('data', chunk => data += chunk);
+      n8nRes.on('end', () => {
+        res.setHeader('Content-Type', 'application/json');
+        res.status(n8nRes.statusCode).send(data);
+      });
     });
 
-    const responseText = await response.text();
+    n8nReq.on('error', (error) => {
+      res.status(500).json({ status: 'erro', mensagem: 'Erro no proxy: ' + error.message });
+    });
 
-    // Retorna a resposta do n8n de volta para o front-end
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(response.status).send(responseText);
-    
+    n8nReq.write(buffer);
+    n8nReq.end();
+
   } catch (error) {
-    return res.status(500).json({ status: 'erro', mensagem: 'Erro interno no proxy da Vercel: ' + error.message });
+    res.status(500).json({ status: 'erro', mensagem: 'Erro interno: ' + error.message });
   }
 }
