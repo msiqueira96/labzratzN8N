@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const buffer = Buffer.concat(chunks);
 
     // URL de produção do seu webhook no n8n
-    const n8nUrl = 'https://webhook.labzratz.tech/webhook/f24a3071-8062-4589-a3bc-7ddbd95e63da';
+    const n8nUrl = 'https://webhook.labzratz.tech/webhook-test/f24a3071-8062-4589-a3bc-7ddbd95e63da';
 
     // Repassa a requisição para o n8n mantendo o Content-Type original (com o boundary do arquivo)
     const response = await fetch(n8nUrl, {
