@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     }
     const buffer = Buffer.concat(chunks);
 
-    const n8nUrl = new URL('https://webhook.labzratz.tech/webhook-test/f24a3071-8062-4589-a3bc-7ddbd95e63da');
+    const n8nUrl = new URL('https://n8n.labzratz.tech/webhook-test/f24a3071-8062-4589-a3bc-7ddbd95e63da');
 
     const options = {
       hostname: n8nUrl.hostname,
