@@ -1,360 +1,387 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+/* global Chart */
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Financeiro | Fluxo de Caixa</title>
+/**
+ * CONFIGURAÇÃO E ESTADO GLOBAL
+ */
+const CONFIG = {
+    URL_ENTRADAS: 'https://script.google.com/macros/s/AKfycbzwFx41WOsrBhI9ydCNFSytfhfu47aL1yt0MVXYUDl4dPol4bjuHv10tYXks_LHSoDT/exec?aba=Entradas',
+    URL_SAIDAS: 'https://script.google.com/macros/s/AKfycbzwFx41WOsrBhI9ydCNFSytfhfu47aL1yt0MVXYUDl4dPol4bjuHv10tYXks_LHSoDT/exec?aba=Saidas',
+    URL_N8N_UPLOAD: '/api/upload'
+};
 
-    <!-- Google Fonts & Chart.js -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+const STATE = {
+    transacoes: [],
+    charts: { yAxis: null, bars: null, donut: null, pie: null }
+};
 
-    <!-- Estilos Separados -->
-    <link rel="stylesheet" href="style.css">
-</head>
+/**
+ * TRATAMENTO E MAPEAMENTO DOS DADOS DA PLANILHA
+ */
+const Formatters = {
+    currency(value) {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+    },
 
-<body>
+    dateToBR(dateStr) {
+        if (!dateStr) return '';
+        const partes = dateStr.split('-');
+        return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dateStr;
+    },
 
-    <div class="app-container">
+    normalizarTransacao(item, index) {
+        // Data
+        const rawData = String(item.data || '').trim();
+        let dataFormatada = '';
+        if (rawData) {
+            if (rawData.includes('/')) {
+                const p = rawData.split(' ')[0].split('/');
+                if (p.length === 3) dataFormatada = `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+            } else if (rawData.includes('-')) {
+                dataFormatada = rawData.substring(0, 10);
+            }
+        }
 
-        <!-- Sidebar / Navegação -->
-        <aside class="sidebar">
-            <div>
-                <div class="brand">
-                    <div class="brand-logo">F</div>
-                    <div class="brand-text">
-                        <h2>FLUXO 2.0</h2>
-                        <span>CONTROL PANEL</span>
+        // Valor
+        const rawValor = item.valor;
+        let valorNum = 0;
+        if (typeof rawValor === 'number') {
+            valorNum = rawValor;
+        } else if (typeof rawValor === 'string') {
+            const cleaned = rawValor.replace(/R\$\s?/, '').replace(/\./g, '').replace(',', '.').trim();
+            valorNum = parseFloat(cleaned) || 0;
+        }
+
+        return {
+            id: String(item.id || ''),
+            data: dataFormatada,
+            fornecedor: String(item.fornecedor || ''),
+            cnpj: String(item.cnpj || ''),
+            operador: String(item.Operador || item.operador || ''),
+            formaPagamento: String(item['forma de pagamento'] || ''),
+            categoria: 'Geral',
+            tipo: String(item.abaOrigem || ''),
+            valor: Math.abs(valorNum)
+        };
+    }
+};
+
+/**
+ * CONEXÃO COM AS APIS
+ */
+const ApiService = {
+    async fetchTodasTransacoes() {
+        const [resEntradas, resSaidas] = await Promise.all([
+            fetch(CONFIG.URL_ENTRADAS).then(r => r.json()).catch(() => []),
+            fetch(CONFIG.URL_SAIDAS).then(r => r.json()).catch(() => [])
+        ]);
+
+        const entradas = (Array.isArray(resEntradas) ? resEntradas : []).map(item => ({ ...item, abaOrigem: 'Entrada' }));
+        const saidas = (Array.isArray(resSaidas) ? resSaidas : []).map(item => ({ ...item, abaOrigem: 'Saidas' }));
+
+        return [...entradas, ...saidas];
+    },
+
+    async uploadDanfe(file) {
+        const formData = new FormData();
+        formData.append('arquivo', file);
+
+        const res = await fetch(CONFIG.URL_N8N_UPLOAD, { method: 'POST', body: formData });
+        let data = {};
+        try { data = await res.json(); } catch (e) { /* Trata resposta sem corpo */ }
+
+        if (!res.ok || data.status === "erro") {
+            throw new Error(data.mensagem || "Erro no processamento.");
+        }
+        return data;
+    }
+};
+
+/**
+ * EXIBIÇÃO NA TABELA
+ */
+const UI = {
+    openModal(id) { document.getElementById(id)?.classList.add('active'); },
+    closeModal(id) { document.getElementById(id)?.classList.remove('active'); },
+
+    renderTable(dados) {
+        const tbody = document.getElementById('tabelaCorpo');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (dados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-20">Nenhuma movimentação encontrada.</td></tr>';
+            return;
+        }
+
+        dados.forEach(t => {
+            const tr = document.createElement('tr');
+            const isEntrada = t.tipo.toLowerCase().includes('entrada');
+            const valClass = isEntrada ? 'val-entrada' : 'val-saida';
+
+            tr.innerHTML = `
+                <td>${Formatters.dateToBR(t.data)}</td>
+                <td title="ID: ${t.id}">
+                    <strong>${t.fornecedor}</strong>
+                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">
+                        ${t.cnpj ? `<span>CNPJ: ${t.cnpj}</span>` : ''}
+                        ${t.formaPagamento ? ` • <span>Pgto: ${t.formaPagamento}</span>` : ''}
+                        ${t.operador ? ` • <span>Op: ${t.operador}</span>` : ''}
                     </div>
-                </div>
+                </td>
+                <td><span class="badge-cat">Geral</span></td>
+                <td class="${valClass}">${t.tipo}</td>
+                <td class="text-right ${valClass}">
+                    ${isEntrada ? '+' : '-'} ${Formatters.currency(t.valor)}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    },
 
-                <ul class="nav-menu">
-                    <li class="nav-item active">
-                        <a href="#" data-tab="dashboard">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
-                                </path>
-                            </svg>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" data-tab="entradas">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            Entradas
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" data-tab="saidas">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4">
-                                </path>
-                            </svg>
-                            Saídas
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" id="btnOpenDanfe">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
-                                </path>
-                            </svg>
-                            Upload DANFE
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" data-tab="config">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                                </path>
-                            </svg>
-                            Configurações
-                        </a>
-                    </li>
-                </ul>
-            </div>
+    updateKPIs(dados) {
+        const entradas = dados.filter(t => t.tipo.toLowerCase().includes('entrada'));
+        const saidas = dados.filter(t => !t.tipo.toLowerCase().includes('entrada'));
 
-            <div class="user-card">
-                <div class="avatar">OP</div>
-                <div class="user-info">
-                    <h4>Operador Caixas</h4>
-                    <p>Permissão: Acesso Total</p>
-                </div>
-            </div>
-        </aside>
+        const totalEntradas = entradas.reduce((a, b) => a + b.valor, 0);
+        const totalSaidas = saidas.reduce((a, b) => a + b.valor, 0);
+        const saldo = totalEntradas - totalSaidas;
 
-        <!-- Conteúdo Principal -->
-        <main class="main-content">
+        const setTxt = (id, txt) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = txt;
+        };
 
-            <header class="top-header">
-                <div class="header-title">
-                    <h1>Fluxo de Caixa <span>Dashboard</span></h1>
-                    <p class="header-subtitle">Acompanhamento e extração automatizada via n8n</p>
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-secondary" id="btnResetarFiltros">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                            </path>
-                        </svg>
-                        Resetar Filtros
-                    </button>
-                    <button class="btn btn-primary" id="btnOpenMovimentacao">
-                        + Nova Movimentação
-                    </button>
-                </div>
-            </header>
+        setTxt('kpiSaldo', Formatters.currency(saldo));
+        setTxt('kpiEntradas', Formatters.currency(totalEntradas));
+        setTxt('kpiSaidas', Formatters.currency(totalSaidas));
+        setTxt('kpiStatusSaldo', saldo >= 0 ? "Positivo" : "Atenção (Negativo)");
+    },
 
-            <div class="filter-bar">
-                <div class="filter-group">
-                    <label for="filtroInicio">Início:</label>
-                    <input type="date" id="filtroInicio">
-                    <label for="filtroFim" class="ml-12">Fim:</label>
-                    <input type="date" id="filtroFim">
-                </div>
-                <div class="filter-group">
-                    <label for="filtroTipo">Tipo (Visão Geral):</label>
-                    <select id="filtroTipo">
-                        <option value="Tudo">Todos os Lançamentos</option>
-                        <option value="Entrada">Somente Entradas</option>
-                        <option value="Saída">Somente Saídas</option>
-                    </select>
-                </div>
-            </div>
+    populateSelectFilters() {
+        const fornecedores = [...new Set(STATE.transacoes.map(t => t.fornecedor).filter(Boolean))].sort();
+        const selectForn = document.getElementById('headerFiltroFornecedor');
+        if (!selectForn) return;
 
-            <div class="dashboard-grid">
+        const valAtual = selectForn.value;
+        selectForn.innerHTML = '<option value="Tudo">▼ Todos</option>' +
+            fornecedores.map(f => `<option value="${f}">${f}</option>`).join('');
 
-                <div class="kpi-column">
-                    <div class="kpi-card highlight">
-                        <div class="kpi-header">
-                            <h3>SALDO NO PERÍODO</h3>
-                            <svg width="18" height="18" fill="none" stroke="#93c5fd" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
-                                </path>
-                            </svg>
-                        </div>
-                        <div class="kpi-value" id="kpiSaldo">R$ 0,00</div>
-                        <div class="kpi-subtext">
-                            <div class="sub-item">
-                                <span>Status Atual</span>
-                                <strong id="kpiStatusSaldo">Consolidado</strong>
-                            </div>
-                        </div>
-                    </div>
+        if (fornecedores.includes(valAtual)) selectForn.value = valAtual;
+    }
+};
 
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3>TOTAL ENTRADAS</h3>
-                            <svg width="18" height="18" fill="none" stroke="#10b981" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                            </svg>
-                        </div>
-                        <div class="kpi-value val-entrada" id="kpiEntradas">R$ 0,00</div>
-                        <div class="kpi-subtext">
-                            <div class="sub-item">
-                                <span>Maior Entrada</span>
-                                <strong id="kpiMaiorEntrada">R$ 0,00</strong>
-                            </div>
-                        </div>
-                    </div>
+/**
+ * GRÁFICOS
+ */
+const ChartManager = {
+    destroyChart(key) {
+        if (STATE.charts[key]) {
+            STATE.charts[key].destroy();
+            STATE.charts[key] = null;
+        }
+    },
 
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3>TOTAL SAÍDAS</h3>
-                            <svg width="18" height="18" fill="none" stroke="#f43f5e" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"></path>
-                            </svg>
-                        </div>
-                        <div class="kpi-value val-saida" id="kpiSaidas">R$ 0,00</div>
-                        <div class="kpi-subtext">
-                            <div class="sub-item">
-                                <span>Maior Despesa</span>
-                                <strong id="kpiMaiorSaida">R$ 0,00</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    renderAll(dados) {
+        if (typeof Chart === 'undefined') return;
+        this.renderBarsAndYAxis(dados);
+        this.renderCategoryDonut(dados);
+        this.renderProportionPie(dados);
+    },
 
-                <div class="charts-column">
+    renderBarsAndYAxis(dados) {
+        const datasMap = {};
+        dados.forEach(d => {
+            if (!datasMap[d.data]) datasMap[d.data] = { e: 0, s: 0 };
+            if (d.tipo.toLowerCase().includes('entrada')) datasMap[d.data].e += d.valor;
+            else datasMap[d.data].s += d.valor;
+        });
 
-                    <div class="chart-card">
-                        <div class="chart-card-header">
-                            <h3>Fluxo por Período (Entradas vs Saídas)</h3>
-                            <div class="chart-legend-fixed">
-                                <span class="legend-item"><span class="legend-box entrada"></span> Entradas</span>
-                                <span class="legend-item"><span class="legend-box saida"></span> Saídas</span>
-                            </div>
-                        </div>
+        const datas = Object.keys(datasMap).sort();
+        const arrEntradas = datas.map(d => datasMap[d].e);
+        const arrSaidas = datas.map(d => datasMap[d].s);
+        const labelsDatas = datas.map(d => Formatters.dateToBR(d));
 
-                        <div class="chart-split-box">
-                            <div class="yaxis-fixed-panel">
-                                <canvas id="chartYAxisCanvas"></canvas>
-                            </div>
+        this.destroyChart('bars');
+        const canvasBars = document.getElementById('chartBarsCanvas');
+        if (canvasBars) {
+            STATE.charts.bars = new Chart(canvasBars.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labelsDatas,
+                    datasets: [
+                        { label: 'Entradas', data: arrEntradas, backgroundColor: '#10b981', borderRadius: 4 },
+                        { label: 'Saídas', data: arrSaidas, backgroundColor: '#f43f5e', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    },
 
-                            <div class="bars-scrollable-area" id="barsScrollArea">
-                                <div class="bars-scrollable-inner" id="barsInnerContainer">
-                                    <canvas id="chartBarsCanvas"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    renderCategoryDonut(dados) {
+        const despesas = dados.filter(t => !t.tipo.toLowerCase().includes('entrada'));
+        const fornMap = {};
+        despesas.forEach(d => {
+            if (d.fornecedor) fornMap[d.fornecedor] = (fornMap[d.fornecedor] || 0) + d.valor;
+        });
 
-                    <div class="two-charts-row">
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <h3>Despesas por Categoria</h3>
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="chartCategoriasDonut"></canvas>
-                            </div>
-                        </div>
+        this.destroyChart('donut');
+        const canvas = document.getElementById('chartCategoriasDonut');
+        if (!canvas) return;
 
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <h3>Proporção Entrada x Saída</h3>
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="chartProporcaoPie"></canvas>
-                            </div>
-                        </div>
-                    </div>
+        STATE.charts.donut = new Chart(canvas.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(fornMap),
+                datasets: [{
+                    data: Object.values(fornMap),
+                    backgroundColor: ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#06b6d4']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    },
 
-                </div>
+    renderProportionPie(dados) {
+        const totE = dados.filter(t => t.tipo.toLowerCase().includes('entrada')).reduce((a, b) => a + b.valor, 0);
+        const totS = dados.filter(t => !t.tipo.toLowerCase().includes('entrada')).reduce((a, b) => a + b.valor, 0);
 
-            </div>
+        this.destroyChart('pie');
+        const canvas = document.getElementById('chartProporcaoPie');
+        if (!canvas) return;
 
-            <div class="table-card">
-                <div class="table-card-header">
-                    <h3>Últimas Transações Registradas</h3>
-                    <button class="btn btn-secondary" id="btnReloadTable">Atualizar Tabela</button>
-                </div>
-                <div class="table-scroll-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>
-                                    <div class="header-filter-wrapper">
-                                        <span>Fornecedor / Descrição</span>
-                                        <select id="headerFiltroFornecedor" class="header-filter-select">
-                                            <option value="Tudo">▼ Todos</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th>
-                                    <div class="header-filter-wrapper">
-                                        <span>Categoria</span>
-                                        <select id="headerFiltroCategoria" class="header-filter-select">
-                                            <option value="Tudo">▼ Todas</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th>
-                                    <div class="header-filter-wrapper">
-                                        <span>Tipo</span>
-                                        <select id="headerFiltroTipo" class="header-filter-select">
-                                            <option value="Tudo">▼ Todos</option>
-                                            <option value="Entrada">Entrada</option>
-                                            <option value="Saída">Saída</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th class="text-right">Valor</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaCorpo"></tbody>
-                    </table>
-                </div>
-            </div>
+        STATE.charts.pie = new Chart(canvas.getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: ['Entradas', 'Saídas'],
+                datasets: [{ data: [totE, totS], backgroundColor: ['#10b981', '#f43f5e'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+};
 
-        </main>
+/**
+ * FILTROS E CARREGAMENTO
+ */
+function aplicarFiltros() {
+    const dtInicio = document.getElementById('filtroInicio')?.value;
+    const dtFim = document.getElementById('filtroFim')?.value;
+    const filtroFornHeader = document.getElementById('headerFiltroFornecedor')?.value || 'Tudo';
+    const filtroTipoHeader = document.getElementById('headerFiltroTipo')?.value || 'Tudo';
 
-    </div>
+    const filtradas = STATE.transacoes.filter(t => {
+        const passaTipo = filtroTipoHeader === 'Tudo' || t.tipo === filtroTipoHeader;
+        const passaFornecedor = filtroFornHeader === 'Tudo' || t.fornecedor === filtroFornHeader;
 
-    <!-- Modais -->
-    <div class="modal-overlay" id="modalMovimentacao">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>Nova Movimentação</h3>
-                <button class="close-btn" data-close="modalMovimentacao">&times;</button>
-            </div>
-            <form id="formMovimentacao">
-                <div class="form-group">
-                    <label for="formTipo">Tipo de Transação</label>
-                    <select class="form-control" id="formTipo" required>
-                        <option value="Entrada">Entrada</option>
-                        <option value="Saída">Saída</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="formData">Data</label>
-                    <input type="date" class="form-control" id="formData" required>
-                </div>
-                <div class="form-group">
-                    <label for="formFornecedor">Fornecedor / Descrição</label>
-                    <input type="text" class="form-control" id="formFornecedor"
-                        placeholder="Ex: Mercado Livre / Cliente X" required>
-                </div>
-                <div class="form-group">
-                    <label for="formCategoria">Categoria</label>
-                    <input type="text" class="form-control" id="formCategoria"
-                        placeholder="Ex: Insumos, Serviços, Vendas" required>
-                </div>
-                <div class="form-group">
-                    <label for="formValor">Valor (R$)</label>
-                    <input type="number" step="0.01" class="form-control" id="formValor" placeholder="0.00" required>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" data-close="modalMovimentacao">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btnSalvarMov">Salvar Registro</button>
-                </div>
-            </form>
-        </div>
-    </div>
+        const dataT = new Date(t.data);
+        const dI = dtInicio ? new Date(dtInicio) : null;
+        const dF = dtFim ? new Date(dtFim) : null;
 
-    <div class="modal-overlay" id="modalDanfe">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>Upload de Documento (PDF ou Imagem)</h3>
-                <button class="close-btn" data-close="modalDanfe">&times;</button>
-            </div>
-            <form id="formDanfe">
-                <p class="modal-info-text">
-                    O arquivo será processado via Webhook n8n para envio ao Google Drive e extração automatizada de
-                    dados.
-                </p>
-                <div class="file-upload-area" id="fileUploadContainer">
-                    <svg width="36" height="36" fill="none" stroke="var(--blue)" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
-                        </path>
-                    </svg>
-                    <p class="upload-title">Clique para escolher a Nota Fiscal ou Imagem</p>
-                    <input type="file" id="arquivoDanfe" accept="application/pdf,image/*" hidden>
-                    <div id="nomeArquivo" class="file-name-display"></div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" data-close="modalDanfe">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btnEnviarDanfe">Enviar para o Drive</button>
-                </div>
-            </form>
-        </div>
-    </div>
+        let passaData = true;
+        if (dI && dF) passaData = dataT >= dI && dataT <= dF;
+        else if (dI) passaData = dataT >= dI;
+        else if (dF) passaData = dataT <= dF;
 
-    <!-- Script JS -->
-    <script src="script.js"></script>
-</body>
+        return passaTipo && passaFornecedor && passaData;
+    });
 
-</html>
+    UI.updateKPIs(filtradas);
+    ChartManager.renderAll(filtradas);
+    UI.renderTable(filtradas);
+}
+
+async function carregarDados() {
+    const tbody = document.getElementById('tabelaCorpo');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center p-20">A carregar dados...</td></tr>';
+
+    try {
+        const dadosBrutos = await ApiService.fetchTodasTransacoes();
+        STATE.transacoes = dadosBrutos
+            .map((item, index) => Formatters.normalizarTransacao(item, index))
+            .sort((a, b) => new Date(b.data) - new Date(a.data));
+
+        UI.populateSelectFilters();
+        aplicarFiltros();
+    } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center p-20" style="color: red;">Erro ao carregar: ${err.message}</td></tr>`;
+    }
+}
+
+/**
+ * INICIALIZAÇÃO E EVENTOS
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof Chart !== 'undefined') {
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = "#64748b";
+    }
+
+    carregarDados();
+
+    // Filtros e Atualizações
+    ['filtroInicio', 'filtroFim', 'headerFiltroFornecedor', 'headerFiltroTipo']
+        .forEach(id => document.getElementById(id)?.addEventListener('change', aplicarFiltros));
+    document.getElementById('btnReloadTable')?.addEventListener('click', carregarDados);
+
+    // Modais
+    document.getElementById('btnOpenMovimentacao')?.addEventListener('click', () => UI.openModal('modalMovimentacao'));
+    document.getElementById('btnOpenDanfe')?.addEventListener('click', () => UI.openModal('modalDanfe'));
+    document.querySelectorAll('[data-close]').forEach(btn => {
+        btn.addEventListener('click', () => UI.closeModal(btn.getAttribute('data-close')));
+    });
+
+    // === LÓGICA DE UPLOAD DE ARQUIVO (INTEGRADA COM HTML) ===
+    const formDanfe = document.getElementById('formDanfe');
+    const inputArquivo = document.getElementById('arquivoDanfe');
+    const btnEnviarDanfe = document.getElementById('btnEnviarDanfe');
+    const fileContainer = document.getElementById('fileUploadContainer');
+    const nomeArquivoDiv = document.getElementById('nomeArquivo');
+
+    // 1. Clicar na área tracejada abre a seleção do arquivo
+    if (fileContainer && inputArquivo) {
+        fileContainer.addEventListener('click', () => inputArquivo.click());
+    }
+
+    // 2. Mostrar o nome do arquivo após seleção
+    if (inputArquivo && nomeArquivoDiv) {
+        inputArquivo.addEventListener('change', () => {
+            nomeArquivoDiv.innerText = inputArquivo.files[0] ? inputArquivo.files[0].name : '';
+        });
+    }
+
+    // 3. Envio seguro do arquivo interceptando o formulário (previne recarregar a página)
+    if (formDanfe) {
+        formDanfe.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            
+            const file = inputArquivo.files[0];
+            if (!file) {
+                alert('Por favor, selecione um arquivo primeiro.');
+                return;
+            }
+
+            try {
+                btnEnviarDanfe.disabled = true;
+                btnEnviarDanfe.innerText = 'A enviar...';
+                
+                await ApiService.uploadDanfe(file);
+                
+                alert('Documento enviado com sucesso!');
+                UI.closeModal('modalDanfe');
+                formDanfe.reset();
+                if (nomeArquivoDiv) nomeArquivoDiv.innerText = '';
+                
+            } catch (error) {
+                alert('Erro ao enviar: ' + error.message);
+            } finally {
+                btnEnviarDanfe.disabled = false;
+                btnEnviarDanfe.innerText = 'Enviar para o Drive'; 
+            }
+        });
+    }
+});
