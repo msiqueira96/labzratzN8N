@@ -15,8 +15,7 @@ const STATE = {
 };
 
 /**
- * TRATAMENTO E MAPEAMENTO DOS 7 CAMPOS DA PLANILHA
- * (id, data, fornecedor, cnpj, Operador, forma de pagamento, valor)
+ * TRATAMENTO E MAPEAMENTO DOS DADOS DA PLANILHA
  */
 const Formatters = {
     currency(value) {
@@ -29,10 +28,10 @@ const Formatters = {
         return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dateStr;
     },
 
-    normalizarTransacao(item, index, tipoOrigem = 'Saída') {
-        // 1. Data (Vencimento)
+    normalizarTransacao(item, index) {
+        // Data
         const rawData = String(item.data || '').trim();
-        let dataFormatada = new Date().toISOString().split('T')[0];
+        let dataFormatada = '';
         if (rawData) {
             if (rawData.includes('/')) {
                 const p = rawData.split(' ')[0].split('/');
@@ -42,7 +41,7 @@ const Formatters = {
             }
         }
 
-        // 2. Valor Pago
+        // Valor
         const rawValor = item.valor;
         let valorNum = 0;
         if (typeof rawValor === 'number') {
@@ -53,14 +52,15 @@ const Formatters = {
         }
 
         return {
-            id: String(item.id || index + 1),                         // Chave de 44 dígitos / ID único
-            data: dataFormatada,                                       // Data de vencimento
-            fornecedor: String(item.fornecedor || 'Não Informado'),    // Nome do fornecedor
-            cnpj: String(item.cnpj || ''),                             // CNPJ da empresa
-            operador: String(item.Operador || item.operador || ''),    // Responsável do registo (n8n)
-            formaPagamento: String(item['forma de pagamento'] || ''),  // Crédito, débito, boleto, dinheiro
-            tipo: item.tipoForcado || tipoOrigem,                      // Entrada ou Saída
-            valor: Math.abs(valorNum)                                  // Valor numérico
+            id: String(item.id || ''),
+            data: dataFormatada,
+            fornecedor: String(item.fornecedor || ''),
+            cnpj: String(item.cnpj || ''),
+            operador: String(item.Operador || item.operador || ''),
+            formaPagamento: String(item['forma de pagamento'] || ''),
+            categoria: 'Geral',
+            tipo: String(item.abaOrigem || ''),
+            valor: Math.abs(valorNum)
         };
     }
 };
@@ -75,8 +75,8 @@ const ApiService = {
             fetch(CONFIG.URL_SAIDAS).then(r => r.json()).catch(() => [])
         ]);
 
-        const entradas = (Array.isArray(resEntradas) ? resEntradas : []).map(item => ({ ...item, tipoForcado: 'Entrada' }));
-        const saidas = (Array.isArray(resSaidas) ? resSaidas : []).map(item => ({ ...item, tipoForcado: 'Saída' }));
+        const entradas = (Array.isArray(resEntradas) ? resEntradas : []).map(item => ({ ...item, abaOrigem: 'Entrada' }));
+        const saidas = (Array.isArray(resSaidas) ? resSaidas : []).map(item => ({ ...item, abaOrigem: 'Saidas' }));
 
         return [...entradas, ...saidas];
     },
@@ -87,17 +87,17 @@ const ApiService = {
 
         const res = await fetch(CONFIG.URL_N8N_UPLOAD, { method: 'POST', body: formData });
         let data = {};
-        try { data = await res.json(); } catch (e) { /* Tratamento silencioso caso resposta seja vazia */ }
+        try { data = await res.json(); } catch (e) { /* Trata resposta sem corpo */ }
 
         if (!res.ok || data.status === "erro") {
-            throw new Error(data.mensagem || "Erro ao processar documento no n8n.");
+            throw new Error(data.mensagem || "Erro no processamento.");
         }
         return data;
     }
 };
 
 /**
- * INTERFACE E EXIBIÇÃO DA TABELA (FOCO: DATA, FORNECEDOR E VALOR)
+ * EXIBIÇÃO NA TABELA
  */
 const UI = {
     openModal(id) { document.getElementById(id)?.classList.add('active'); },
@@ -109,20 +109,18 @@ const UI = {
         tbody.innerHTML = '';
 
         if (dados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center p-20">Nenhuma movimentação encontrada.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-20">Nenhuma movimentação encontrada.</td></tr>';
             return;
         }
 
         dados.forEach(t => {
             const tr = document.createElement('tr');
-            const isEntrada = t.tipo === 'Entrada';
+            const isEntrada = t.tipo.toLowerCase().includes('entrada');
             const valClass = isEntrada ? 'val-entrada' : 'val-saida';
 
-            // Apresentação focada: Data | Fornecedor / Descrição | Valor
-            // Outros dados (ID, CNPJ, Forma de Pgto, Operador) ficam interligados no objeto t e visíveis abaixo do nome
             tr.innerHTML = `
                 <td>${Formatters.dateToBR(t.data)}</td>
-                <td title="Chave ID: ${t.id}">
+                <td title="ID: ${t.id}">
                     <strong>${t.fornecedor}</strong>
                     <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">
                         ${t.cnpj ? `<span>CNPJ: ${t.cnpj}</span>` : ''}
@@ -130,6 +128,8 @@ const UI = {
                         ${t.operador ? ` • <span>Op: ${t.operador}</span>` : ''}
                     </div>
                 </td>
+                <td><span class="badge-cat">Geral</span></td>
+                <td class="${valClass}">${t.tipo}</td>
                 <td class="text-right ${valClass}">
                     ${isEntrada ? '+' : '-'} ${Formatters.currency(t.valor)}
                 </td>
@@ -139,8 +139,8 @@ const UI = {
     },
 
     updateKPIs(dados) {
-        const entradas = dados.filter(t => t.tipo === 'Entrada');
-        const saidas = dados.filter(t => t.tipo === 'Saída');
+        const entradas = dados.filter(t => t.tipo.toLowerCase().includes('entrada'));
+        const saidas = dados.filter(t => !t.tipo.toLowerCase().includes('entrada'));
 
         const totalEntradas = entradas.reduce((a, b) => a + b.valor, 0);
         const totalSaidas = saidas.reduce((a, b) => a + b.valor, 0);
@@ -158,7 +158,7 @@ const UI = {
     },
 
     populateSelectFilters() {
-        const fornecedores = [...new Set(STATE.transacoes.map(t => t.fornecedor))].sort();
+        const fornecedores = [...new Set(STATE.transacoes.map(t => t.fornecedor).filter(Boolean))].sort();
         const selectForn = document.getElementById('headerFiltroFornecedor');
         if (!selectForn) return;
 
@@ -171,7 +171,7 @@ const UI = {
 };
 
 /**
- * GRÁFICOS DO DASHBOARD
+ * GRÁFICOS
  */
 const ChartManager = {
     destroyChart(key) {
@@ -192,17 +192,14 @@ const ChartManager = {
         const datasMap = {};
         dados.forEach(d => {
             if (!datasMap[d.data]) datasMap[d.data] = { e: 0, s: 0 };
-            if (d.tipo === 'Entrada') datasMap[d.data].e += d.valor;
-            if (d.tipo === 'Saída') datasMap[d.data].s += d.valor;
+            if (d.tipo.toLowerCase().includes('entrada')) datasMap[d.data].e += d.valor;
+            else datasMap[d.data].s += d.valor;
         });
 
         const datas = Object.keys(datasMap).sort();
         const arrEntradas = datas.map(d => datasMap[d].e);
         const arrSaidas = datas.map(d => datasMap[d].s);
         const labelsDatas = datas.map(d => Formatters.dateToBR(d));
-
-        const valorMaximo = Math.max(...arrEntradas, ...arrSaidas, 1000);
-        const tetoEscala = Math.ceil((valorMaximo * 1.1) / 500) * 500;
 
         this.destroyChart('bars');
         const canvasBars = document.getElementById('chartBarsCanvas');
@@ -218,17 +215,18 @@ const ChartManager = {
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { min: 0, max: tetoEscala } }
+                    maintainAspectRatio: false
                 }
             });
         }
     },
 
     renderCategoryDonut(dados) {
-        const despesas = dados.filter(t => t.tipo === 'Saída');
+        const despesas = dados.filter(t => !t.tipo.toLowerCase().includes('entrada'));
         const fornMap = {};
-        despesas.forEach(d => fornMap[d.fornecedor] = (fornMap[d.fornecedor] || 0) + d.valor);
+        despesas.forEach(d => {
+            if (d.fornecedor) fornMap[d.fornecedor] = (fornMap[d.fornecedor] || 0) + d.valor;
+        });
 
         this.destroyChart('donut');
         const canvas = document.getElementById('chartCategoriasDonut');
@@ -237,9 +235,9 @@ const ChartManager = {
         STATE.charts.donut = new Chart(canvas.getContext('2d'), {
             type: 'doughnut',
             data: {
-                labels: Object.keys(fornMap).length ? Object.keys(fornMap) : ['Sem dados'],
+                labels: Object.keys(fornMap),
                 datasets: [{
-                    data: Object.values(fornMap).length ? Object.values(fornMap) : [1],
+                    data: Object.values(fornMap),
                     backgroundColor: ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#06b6d4']
                 }]
             },
@@ -248,8 +246,8 @@ const ChartManager = {
     },
 
     renderProportionPie(dados) {
-        const totE = dados.filter(t => t.tipo === 'Entrada').reduce((a, b) => a + b.valor, 0);
-        const totS = dados.filter(t => t.tipo === 'Saída').reduce((a, b) => a + b.valor, 0);
+        const totE = dados.filter(t => t.tipo.toLowerCase().includes('entrada')).reduce((a, b) => a + b.valor, 0);
+        const totS = dados.filter(t => !t.tipo.toLowerCase().includes('entrada')).reduce((a, b) => a + b.valor, 0);
 
         this.destroyChart('pie');
         const canvas = document.getElementById('chartProporcaoPie');
@@ -267,7 +265,7 @@ const ChartManager = {
 };
 
 /**
- * REGRAS DE FILTRO E CARREGAMENTO
+ * FILTROS E CARREGAMENTO
  */
 function aplicarFiltros() {
     const dtInicio = document.getElementById('filtroInicio')?.value;
@@ -298,7 +296,7 @@ function aplicarFiltros() {
 
 async function carregarDados() {
     const tbody = document.getElementById('tabelaCorpo');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="3" class="text-center p-20">A carregar dados...</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center p-20">A carregar dados...</td></tr>';
 
     try {
         const dadosBrutos = await ApiService.fetchTodasTransacoes();
@@ -310,7 +308,7 @@ async function carregarDados() {
         aplicarFiltros();
     } catch (err) {
         console.error("Erro ao carregar dados:", err);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="3" class="text-center p-20" style="color: red;">Erro ao carregar: ${err.message}</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center p-20" style="color: red;">Erro ao carregar: ${err.message}</td></tr>`;
     }
 }
 
