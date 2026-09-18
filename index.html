@@ -991,7 +991,8 @@
                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
                         </path>
                     </svg>
-                    <p style="font-size: 13px; font-weight: 600; margin-top: 8px;">Clique para escolher a Nota Fiscal ou Imagem</p>
+                    <p style="font-size: 13px; font-weight: 600; margin-top: 8px;">Clique para escolher a Nota Fiscal ou
+                        Imagem</p>
                     <input type="file" id="arquivoDanfe" accept="application/pdf,image/*" style="display: none;"
                         onchange="atualizarNomeArquivo(this)">
                     <div id="nomeArquivo"
@@ -1007,33 +1008,105 @@
     </div>
 
     <script>
+        // ⚠️ COLE AQUI O URL DA SUA API CRIADA NO APPS SCRIPT
+        const URL_DA_SUA_API = 'https://script.google.com/macros/s/AKfycbxFYCo94eBlfytu4jiYFQoR_CN-r52rVGAv9sMTJhj5SDMPDqJ-MPOmYl7I1hUhIR8W/exec';
+
+        const URL_N8N_UPLOAD = '/api/upload';
+
         let transacoes = [];
         let chartYAxisInstance = null;
         let chartBarsInstance = null;
         let chartDonut = null;
         let chartPie = null;
 
-        const URL_N8N_UPLOAD = '/api/upload';
-
         Chart.defaults.font.family = "'Inter', sans-serif";
         Chart.defaults.color = "#64748b";
 
+        // Mapeia e padroniza as colunas da planilha para o formato do dashboard
+        function normalizarTransacao(item, index) {
+            const chaves = Object.keys(item);
+
+            // Identificação dinâmica das colunas
+            let rawData = item.data || item.Data || item.data_emissao || item['DATA'] || (chaves[1] ? item[chaves[1]] : '');
+            let rawFornecedor = item.fornecedor || item.Fornecedor || item['cnpj(fornecedor)'] || item['cnpj_fornecedor'] || item.razao_social_emitente || (chaves[2] ? item[chaves[2]] : 'Desconhecido');
+            let rawCategoria = item.categoria || item.Categoria || item.tipo_documento || item['CATEGORIA'] || 'Geral';
+            let rawTipo = item.tipo || item.Tipo || item['TIPO'] || 'Saída';
+            let rawValor = item.valor || item.Valor || item.valor_total_nota || item.valor_documento || item.valor_total || item['VALOR'] || (chaves[4] ? item[chaves[4]] : 0);
+
+            // Tratamento correto de datas (Remove o horário "15:43" antes de separar por "/")
+            let dataFormatada = '';
+            if (rawData) {
+                let strData = String(rawData).trim().split(' ')[0]; // Pega apenas a parte da data
+                if (strData.includes('/')) {
+                    const partes = strData.split('/');
+                    if (partes.length === 3) {
+                        dataFormatada = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+                    }
+                } else if (strData.includes('-')) {
+                    dataFormatada = strData.substring(0, 10);
+                }
+            }
+            if (!dataFormatada || isNaN(new Date(dataFormatada).getTime())) {
+                dataFormatada = new Date().toISOString().split('T')[0];
+            }
+
+            // Tratamento e limpeza do Valor
+            let valorNum = 0;
+            if (typeof rawValor === 'number') {
+                valorNum = rawValor;
+            } else if (typeof rawValor === 'string') {
+                let cleaned = rawValor.replace(/R\$\s?/, '').replace(/\./g, '').replace(',', '.').trim();
+                valorNum = parseFloat(cleaned) || 0;
+            }
+
+            // Identificação do Tipo (Entrada ou Saída)
+            let tipoFinal = 'Saída';
+            const tipoLower = String(rawTipo).toLowerCase();
+            if (tipoLower.includes('entr') || tipoLower.includes('receit')) {
+                tipoFinal = 'Entrada';
+            }
+
+            return {
+                id: item.id || (index + 1),
+                data: dataFormatada,
+                fornecedor: String(rawFornecedor || 'Desconhecido'),
+                categoria: String(rawCategoria || 'Geral'),
+                tipo: tipoFinal,
+                valor: Math.abs(valorNum)
+            };
+        }
+
         async function carregarDados() {
-            document.getElementById('tabelaCorpo').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Carregando dados...</td></tr>';
+            const tbody = document.getElementById('tabelaCorpo');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Carregando dados da planilha...</td></tr>';
 
-            transacoes = [
-                { id: 1, data: '2026-09-01', fornecedor: 'Venda de Balcão', categoria: 'Receita', tipo: 'Entrada', valor: 2500.00 },
-                { id: 2, data: '2026-09-02', fornecedor: 'Fornecedor B', categoria: 'Insumos', tipo: 'Saída', valor: 1200.00 },
-                { id: 3, data: '2026-09-03', fornecedor: 'Contrato A', categoria: 'Receita', tipo: 'Entrada', valor: 4300.00 },
-                { id: 4, data: '2026-09-05', fornecedor: 'Tarifas Bancárias', categoria: 'Despesa', tipo: 'Saída', valor: 350.00 },
-                { id: 5, data: '2026-09-07', fornecedor: 'Material de Consumo', categoria: 'Insumos', tipo: 'Saída', valor: 880.00 },
-                { id: 6, data: '2026-09-08', fornecedor: 'Serviço Prestado', categoria: 'Receita', tipo: 'Entrada', valor: 1800.00 },
-                { id: 7, data: '2026-09-09', fornecedor: 'Energia Elétrica', categoria: 'Despesa Fixa', tipo: 'Saída', valor: 490.00 },
-                { id: 8, data: '2026-09-10', fornecedor: 'Fornecedor C', categoria: 'Insumos', tipo: 'Saída', valor: 1400.00 }
-            ];
+            if (URL_DA_SUA_API === 'COLE_SEU_LINK_DO_APPS_SCRIPT_AQUI' || !URL_DA_SUA_API) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--red); padding: 20px;">⚠️ Cole o link do seu Apps Script na variável <strong>URL_DA_SUA_API</strong> no arquivo HTML!</td></tr>';
+                return;
+            }
 
-            popularOpcoesSelectCabecalho();
-            aplicarFiltros();
+            try {
+                const res = await fetch(URL_DA_SUA_API);
+                const dadosBrutos = await res.json();
+
+                if (dadosBrutos.error) {
+                    throw new Error(dadosBrutos.error);
+                }
+
+                if (!Array.isArray(dadosBrutos) || dadosBrutos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Nenhum registo encontrado na planilha.</td></tr>';
+                    transacoes = [];
+                } else {
+                    transacoes = dadosBrutos.map((item, index) => normalizarTransacao(item, index));
+                }
+
+                popularOpcoesSelectCabecalho();
+                aplicarFiltros();
+
+            } catch (err) {
+                console.error("Erro ao carregar dados da planilha:", err);
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--red); padding: 20px;">Erro ao carregar dados: ${err.message}</td></tr>`;
+            }
         }
 
         function popularOpcoesSelectCabecalho() {
@@ -1382,6 +1455,7 @@
             }
         }
 
+        // Executa ao carregar a página
         carregarDados();
     </script>
 </body>
