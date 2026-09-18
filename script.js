@@ -1,64 +1,49 @@
+/* global Chart */
+
 /**
- * MÓDULO DE CONFIGURAÇÃO E ESTADO GLOBAL
+ * CONFIGURAÇÃO E ESTADO GLOBAL
  */
 const CONFIG = {
-    URL_API: 'https://script.google.com/macros/s/AKfycbzwFx41WOsrBhI9ydCNFSytfhfu47aL1yt0MVXYUDl4dPol4bjuHv10tYXks_LHSoDT/exec?aba=Entradas',
+    URL_ENTRADAS: 'https://script.google.com/macros/s/AKfycbzwFx41WOsrBhI9ydCNFSytfhfu47aL1yt0MVXYUDl4dPol4bjuHv10tYXks_LHSoDT/exec?aba=Entradas',
+    URL_SAIDAS: 'https://script.google.com/macros/s/AKfycbzwFx41WOsrBhI9ydCNFSytfhfu47aL1yt0MVXYUDl4dPol4bjuHv10tYXks_LHSoDT/exec?aba=Saidas',
     URL_N8N_UPLOAD: '/api/upload'
 };
 
 const STATE = {
     transacoes: [],
-    charts: {
-        yAxis: null,
-        bars: null,
-        donut: null,
-        pie: null
-    }
+    charts: { yAxis: null, bars: null, donut: null, pie: null }
 };
 
-// Configuração padrão do Chart.js
-Chart.defaults.font.family = "'Inter', sans-serif";
-Chart.defaults.color = "#64748b";
-
 /**
- * MÓDULO DE FORMATADORES E NORMALIZAÇÃO DE DADOS
+ * TRATAMENTO E MAPEAMENTO DOS 7 CAMPOS DA PLANILHA
+ * (id, data, fornecedor, cnpj, Operador, forma de pagamento, valor)
  */
 const Formatters = {
     currency(value) {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
     },
 
     dateToBR(dateStr) {
-        return dateStr ? dateStr.split('-').reverse().join('/') : '';
+        if (!dateStr) return '';
+        const partes = dateStr.split('-');
+        return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dateStr;
     },
 
-    normalizarTransacao(item, index) {
-        const chaves = Object.keys(item);
-
-        const rawData = item.data || item.Data || item.data_emissao || item['DATA'] || (chaves[1] ? item[chaves[1]] : '');
-        const rawFornecedor = item.fornecedor || item.Fornecedor || item['cnpj(fornecedor)'] || item['cnpj_fornecedor'] || item.razao_social_emitente || (chaves[2] ? item[chaves[2]] : 'Desconhecido');
-        const rawCategoria = item.categoria || item.Categoria || item.tipo_documento || item['CATEGORIA'] || 'Geral';
-        const rawTipo = item.tipo || item.Tipo || item['TIPO'] || 'Saída';
-        const rawValor = item.valor || item.Valor || item.valor_total_nota || item.valor_documento || item.valor_total || item['VALOR'] || (chaves[4] ? item[chaves[4]] : 0);
-
-        // Tratamento de Data
-        let dataFormatada = '';
+    normalizarTransacao(item, index, tipoOrigem = 'Saída') {
+        // 1. Data (Vencimento)
+        const rawData = String(item.data || '').trim();
+        let dataFormatada = new Date().toISOString().split('T')[0];
         if (rawData) {
-            const strData = String(rawData).trim().split(' ')[0];
-            if (strData.includes('/')) {
-                const partes = strData.split('/');
-                if (partes.length === 3) {
-                    dataFormatada = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
-                }
-            } else if (strData.includes('-')) {
-                dataFormatada = strData.substring(0, 10);
+            if (rawData.includes('/')) {
+                const p = rawData.split(' ')[0].split('/');
+                if (p.length === 3) dataFormatada = `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+            } else if (rawData.includes('-')) {
+                dataFormatada = rawData.substring(0, 10);
             }
         }
-        if (!dataFormatada || isNaN(new Date(dataFormatada).getTime())) {
-            dataFormatada = new Date().toISOString().split('T')[0];
-        }
 
-        // Tratamento do Valor
+        // 2. Valor Pago
+        const rawValor = item.valor;
         let valorNum = 0;
         if (typeof rawValor === 'number') {
             valorNum = rawValor;
@@ -67,30 +52,33 @@ const Formatters = {
             valorNum = parseFloat(cleaned) || 0;
         }
 
-        // Identificação de Tipo
-        const tipoLower = String(rawTipo).toLowerCase();
-        const tipoFinal = (tipoLower.includes('entr') || tipoLower.includes('receit')) ? 'Entrada' : 'Saída';
-
         return {
-            id: item.id || (index + 1),
-            data: dataFormatada,
-            fornecedor: String(rawFornecedor || 'Desconhecido'),
-            categoria: String(rawCategoria || 'Geral'),
-            tipo: tipoFinal,
-            valor: Math.abs(valorNum)
+            id: String(item.id || index + 1),                         // Chave de 44 dígitos / ID único
+            data: dataFormatada,                                       // Data de vencimento
+            fornecedor: String(item.fornecedor || 'Não Informado'),    // Nome do fornecedor
+            cnpj: String(item.cnpj || ''),                             // CNPJ da empresa
+            operador: String(item.Operador || item.operador || ''),    // Responsável do registo (n8n)
+            formaPagamento: String(item['forma de pagamento'] || ''),  // Crédito, débito, boleto, dinheiro
+            tipo: item.tipoForcado || tipoOrigem,                      // Entrada ou Saída
+            valor: Math.abs(valorNum)                                  // Valor numérico
         };
     }
 };
 
 /**
- * MÓDULO DE SERVIÇOS DE API (FETCH)
+ * CONEXÃO COM AS APIS
  */
 const ApiService = {
-    async fetchTransacoes() {
-        const response = await fetch(CONFIG.URL_API);
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
-        return data;
+    async fetchTodasTransacoes() {
+        const [resEntradas, resSaidas] = await Promise.all([
+            fetch(CONFIG.URL_ENTRADAS).then(r => r.json()).catch(() => []),
+            fetch(CONFIG.URL_SAIDAS).then(r => r.json()).catch(() => [])
+        ]);
+
+        const entradas = (Array.isArray(resEntradas) ? resEntradas : []).map(item => ({ ...item, tipoForcado: 'Entrada' }));
+        const saidas = (Array.isArray(resSaidas) ? resSaidas : []).map(item => ({ ...item, tipoForcado: 'Saída' }));
+
+        return [...entradas, ...saidas];
     },
 
     async uploadDanfe(file) {
@@ -99,7 +87,7 @@ const ApiService = {
 
         const res = await fetch(CONFIG.URL_N8N_UPLOAD, { method: 'POST', body: formData });
         let data = {};
-        try { data = await res.json(); } catch (e) { /* Resposta vazia ok */ }
+        try { data = await res.json(); } catch (e) { /* Tratamento silencioso caso resposta seja vazia */ }
 
         if (!res.ok || data.status === "erro") {
             throw new Error(data.mensagem || "Erro ao processar documento no n8n.");
@@ -109,7 +97,7 @@ const ApiService = {
 };
 
 /**
- * MÓDULO DE GERENCIAMENTO DE INTERFACE (UI)
+ * INTERFACE E EXIBIÇÃO DA TABELA (FOCO: DATA, FORNECEDOR E VALOR)
  */
 const UI = {
     openModal(id) { document.getElementById(id)?.classList.add('active'); },
@@ -117,10 +105,11 @@ const UI = {
 
     renderTable(dados) {
         const tbody = document.getElementById('tabelaCorpo');
+        if (!tbody) return;
         tbody.innerHTML = '';
 
         if (dados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-20">Nenhuma movimentação encontrada.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center p-20">Nenhuma movimentação encontrada.</td></tr>';
             return;
         }
 
@@ -129,11 +118,18 @@ const UI = {
             const isEntrada = t.tipo === 'Entrada';
             const valClass = isEntrada ? 'val-entrada' : 'val-saida';
 
+            // Apresentação focada: Data | Fornecedor / Descrição | Valor
+            // Outros dados (ID, CNPJ, Forma de Pgto, Operador) ficam interligados no objeto t e visíveis abaixo do nome
             tr.innerHTML = `
                 <td>${Formatters.dateToBR(t.data)}</td>
-                <td><strong>${t.fornecedor}</strong></td>
-                <td><span class="badge-cat">${t.categoria}</span></td>
-                <td class="${valClass}">${t.tipo}</td>
+                <td title="Chave ID: ${t.id}">
+                    <strong>${t.fornecedor}</strong>
+                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">
+                        ${t.cnpj ? `<span>CNPJ: ${t.cnpj}</span>` : ''}
+                        ${t.formaPagamento ? ` • <span>Pgto: ${t.formaPagamento}</span>` : ''}
+                        ${t.operador ? ` • <span>Op: ${t.operador}</span>` : ''}
+                    </div>
+                </td>
                 <td class="text-right ${valClass}">
                     ${isEntrada ? '+' : '-'} ${Formatters.currency(t.valor)}
                 </td>
@@ -150,41 +146,32 @@ const UI = {
         const totalSaidas = saidas.reduce((a, b) => a + b.valor, 0);
         const saldo = totalEntradas - totalSaidas;
 
-        const maiorEntrada = entradas.length ? Math.max(...entradas.map(e => e.valor)) : 0;
-        const maiorSaida = saidas.length ? Math.max(...saidas.map(s => s.valor)) : 0;
+        const setTxt = (id, txt) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = txt;
+        };
 
-        document.getElementById('kpiSaldo').innerText = Formatters.currency(saldo);
-        document.getElementById('kpiEntradas').innerText = Formatters.currency(totalEntradas);
-        document.getElementById('kpiSaidas').innerText = Formatters.currency(totalSaidas);
-
-        document.getElementById('kpiMaiorEntrada').innerText = Formatters.currency(maiorEntrada);
-        document.getElementById('kpiMaiorSaida').innerText = Formatters.currency(maiorSaida);
-        document.getElementById('kpiStatusSaldo').innerText = saldo >= 0 ? "Positivo" : "Atenção (Negativo)";
+        setTxt('kpiSaldo', Formatters.currency(saldo));
+        setTxt('kpiEntradas', Formatters.currency(totalEntradas));
+        setTxt('kpiSaidas', Formatters.currency(totalSaidas));
+        setTxt('kpiStatusSaldo', saldo >= 0 ? "Positivo" : "Atenção (Negativo)");
     },
 
     populateSelectFilters() {
         const fornecedores = [...new Set(STATE.transacoes.map(t => t.fornecedor))].sort();
-        const categorias = [...new Set(STATE.transacoes.map(t => t.categoria))].sort();
-
         const selectForn = document.getElementById('headerFiltroFornecedor');
-        const selectCat = document.getElementById('headerFiltroCategoria');
+        if (!selectForn) return;
 
-        const valFornAtual = selectForn.value;
-        const valCatAtual = selectCat.value;
-
+        const valAtual = selectForn.value;
         selectForn.innerHTML = '<option value="Tudo">▼ Todos</option>' +
             fornecedores.map(f => `<option value="${f}">${f}</option>`).join('');
 
-        selectCat.innerHTML = '<option value="Tudo">▼ Todas</option>' +
-            categorias.map(c => `<option value="${c}">${c}</option>`).join('');
-
-        if (fornecedores.includes(valFornAtual)) selectForn.value = valFornAtual;
-        if (categorias.includes(valCatAtual)) selectCat.value = valCatAtual;
+        if (fornecedores.includes(valAtual)) selectForn.value = valAtual;
     }
 };
 
 /**
- * MÓDULO DE RENDERIZAÇÃO DE GRÁFICOS
+ * GRÁFICOS DO DASHBOARD
  */
 const ChartManager = {
     destroyChart(key) {
@@ -195,6 +182,7 @@ const ChartManager = {
     },
 
     renderAll(dados) {
+        if (typeof Chart === 'undefined') return;
         this.renderBarsAndYAxis(dados);
         this.renderCategoryDonut(dados);
         this.renderProportionPie(dados);
@@ -216,84 +204,46 @@ const ChartManager = {
         const valorMaximo = Math.max(...arrEntradas, ...arrSaidas, 1000);
         const tetoEscala = Math.ceil((valorMaximo * 1.1) / 500) * 500;
 
-        // Ajuste dinâmico de largura
-        const innerContainer = document.getElementById('barsInnerContainer');
-        if (innerContainer) {
-            innerContainer.style.width = `${Math.max(900, datas.length * 110)}px`;
-        }
-
-        // Render Y-Axis
-        this.destroyChart('yAxis');
-        const ctxY = document.getElementById('chartYAxisCanvas').getContext('2d');
-        STATE.charts.yAxis = new Chart(ctxY, {
-            type: 'bar',
-            data: { labels: [''], datasets: [{ data: [0] }] },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                layout: { padding: { top: 12, bottom: 28, left: 5, right: 0 } },
-                plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                scales: {
-                    x: { display: false },
-                    y: {
-                        min: 0,
-                        max: tetoEscala,
-                        ticks: { stepSize: 500, font: { size: 11, weight: '600' }, color: '#64748b' },
-                        grid: { drawBorder: false, color: '#f1f5f9' }
-                    }
-                }
-            }
-        });
-
-        // Render Bars
         this.destroyChart('bars');
-        const ctxBars = document.getElementById('chartBarsCanvas').getContext('2d');
-        STATE.charts.bars = new Chart(ctxBars, {
-            type: 'bar',
-            data: {
-                labels: labelsDatas,
-                datasets: [
-                    { label: 'Entradas', data: arrEntradas, backgroundColor: '#10b981', borderRadius: 4, barPercentage: 0.6 },
-                    { label: 'Saídas', data: arrSaidas, backgroundColor: '#f43f5e', borderRadius: 4, barPercentage: 0.6 }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                layout: { padding: { top: 12, bottom: 10, left: 10, right: 15 } },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => `${ctx.dataset.label}: ${Formatters.currency(ctx.parsed.y)}`
-                        }
-                    }
+        const canvasBars = document.getElementById('chartBarsCanvas');
+        if (canvasBars) {
+            STATE.charts.bars = new Chart(canvasBars.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labelsDatas,
+                    datasets: [
+                        { label: 'Entradas', data: arrEntradas, backgroundColor: '#10b981', borderRadius: 4 },
+                        { label: 'Saídas', data: arrSaidas, backgroundColor: '#f43f5e', borderRadius: 4 }
+                    ]
                 },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 11, weight: '600' }, color: '#64748b' } },
-                    y: { min: 0, max: tetoEscala, ticks: { stepSize: 500, display: false }, grid: { color: '#f1f5f9', drawBorder: false } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { min: 0, max: tetoEscala } }
                 }
-            }
-        });
+            });
+        }
     },
 
     renderCategoryDonut(dados) {
         const despesas = dados.filter(t => t.tipo === 'Saída');
-        const catMap = {};
-        despesas.forEach(d => catMap[d.categoria] = (catMap[d.categoria] || 0) + d.valor);
+        const fornMap = {};
+        despesas.forEach(d => fornMap[d.fornecedor] = (fornMap[d.fornecedor] || 0) + d.valor);
 
         this.destroyChart('donut');
-        const ctxDonut = document.getElementById('chartCategoriasDonut').getContext('2d');
-        STATE.charts.donut = new Chart(ctxDonut, {
+        const canvas = document.getElementById('chartCategoriasDonut');
+        if (!canvas) return;
+
+        STATE.charts.donut = new Chart(canvas.getContext('2d'), {
             type: 'doughnut',
             data: {
-                labels: Object.keys(catMap).length ? Object.keys(catMap) : ['Sem despesas'],
+                labels: Object.keys(fornMap).length ? Object.keys(fornMap) : ['Sem dados'],
                 datasets: [{
-                    data: Object.values(catMap).length ? Object.values(catMap) : [1],
+                    data: Object.values(fornMap).length ? Object.values(fornMap) : [1],
                     backgroundColor: ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#06b6d4']
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            options: { responsive: true, maintainAspectRatio: false }
         });
     },
 
@@ -302,35 +252,32 @@ const ChartManager = {
         const totS = dados.filter(t => t.tipo === 'Saída').reduce((a, b) => a + b.valor, 0);
 
         this.destroyChart('pie');
-        const ctxPie = document.getElementById('chartProporcaoPie').getContext('2d');
-        STATE.charts.pie = new Chart(ctxPie, {
+        const canvas = document.getElementById('chartProporcaoPie');
+        if (!canvas) return;
+
+        STATE.charts.pie = new Chart(canvas.getContext('2d'), {
             type: 'pie',
             data: {
                 labels: ['Entradas', 'Saídas'],
                 datasets: [{ data: [totE, totS], backgroundColor: ['#10b981', '#f43f5e'] }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            options: { responsive: true, maintainAspectRatio: false }
         });
     }
 };
 
 /**
- * REGRAS DE NEGÓCIO E FILTRAGEM
+ * REGRAS DE FILTRO E CARREGAMENTO
  */
 function aplicarFiltros() {
-    const dtInicio = document.getElementById('filtroInicio').value;
-    const dtFim = document.getElementById('filtroFim').value;
-    const tipoBarra = document.getElementById('filtroTipo').value;
-
-    const filtroFornHeader = document.getElementById('headerFiltroFornecedor').value;
-    const filtroCatHeader = document.getElementById('headerFiltroCategoria').value;
-    const filtroTipoHeader = document.getElementById('headerFiltroTipo').value;
+    const dtInicio = document.getElementById('filtroInicio')?.value;
+    const dtFim = document.getElementById('filtroFim')?.value;
+    const filtroFornHeader = document.getElementById('headerFiltroFornecedor')?.value || 'Tudo';
+    const filtroTipoHeader = document.getElementById('headerFiltroTipo')?.value || 'Tudo';
 
     const filtradas = STATE.transacoes.filter(t => {
-        const passaTipoBarra = tipoBarra === 'Tudo' || t.tipo === tipoBarra;
-        const passaTipoHeader = filtroTipoHeader === 'Tudo' || t.tipo === filtroTipoHeader;
+        const passaTipo = filtroTipoHeader === 'Tudo' || t.tipo === filtroTipoHeader;
         const passaFornecedor = filtroFornHeader === 'Tudo' || t.fornecedor === filtroFornHeader;
-        const passaCategoria = filtroCatHeader === 'Tudo' || t.categoria === filtroCatHeader;
 
         const dataT = new Date(t.data);
         const dI = dtInicio ? new Date(dtInicio) : null;
@@ -341,7 +288,7 @@ function aplicarFiltros() {
         else if (dI) passaData = dataT >= dI;
         else if (dF) passaData = dataT <= dF;
 
-        return passaTipoBarra && passaTipoHeader && passaFornecedor && passaCategoria && passaData;
+        return passaTipo && passaFornecedor && passaData;
     });
 
     UI.updateKPIs(filtradas);
@@ -349,125 +296,43 @@ function aplicarFiltros() {
     UI.renderTable(filtradas);
 }
 
-function resetarFiltros() {
-    document.getElementById('filtroInicio').value = '';
-    document.getElementById('filtroFim').value = '';
-    document.getElementById('filtroTipo').value = 'Tudo';
-    document.getElementById('headerFiltroFornecedor').value = 'Tudo';
-    document.getElementById('headerFiltroCategoria').value = 'Tudo';
-    document.getElementById('headerFiltroTipo').value = 'Tudo';
-
-    aplicarFiltros();
-}
-
 async function carregarDados() {
     const tbody = document.getElementById('tabelaCorpo');
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-20">Carregando dados da planilha...</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="3" class="text-center p-20">A carregar dados...</td></tr>';
 
     try {
-        const dadosBrutos = await ApiService.fetchTransacoes();
-        if (!Array.isArray(dadosBrutos) || dadosBrutos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-20">Nenhum registro encontrado.</td></tr>';
-            STATE.transacoes = [];
-        } else {
-            STATE.transacoes = dadosBrutos.map((item, index) => Formatters.normalizarTransacao(item, index));
-        }
+        const dadosBrutos = await ApiService.fetchTodasTransacoes();
+        STATE.transacoes = dadosBrutos
+            .map((item, index) => Formatters.normalizarTransacao(item, index))
+            .sort((a, b) => new Date(b.data) - new Date(a.data));
 
         UI.populateSelectFilters();
         aplicarFiltros();
-
     } catch (err) {
         console.error("Erro ao carregar dados:", err);
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--red); padding: 20px;">Erro ao carregar dados: ${err.message}</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="3" class="text-center p-20" style="color: red;">Erro ao carregar: ${err.message}</td></tr>`;
     }
 }
 
 /**
- * EVENT LISTENERS (INICIALIZAÇÃO)
+ * INICIALIZAÇÃO
  */
 document.addEventListener('DOMContentLoaded', () => {
-    // Carregamento Inicial
+    if (typeof Chart !== 'undefined') {
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = "#64748b";
+    }
+
     carregarDados();
 
-    // Eventos de Filtros
-    ['filtroInicio', 'filtroFim', 'filtroTipo', 'headerFiltroFornecedor', 'headerFiltroCategoria', 'headerFiltroTipo']
+    ['filtroInicio', 'filtroFim', 'headerFiltroFornecedor', 'headerFiltroTipo']
         .forEach(id => document.getElementById(id)?.addEventListener('change', aplicarFiltros));
 
-    document.getElementById('btnResetarFiltros')?.addEventListener('click', resetarFiltros);
     document.getElementById('btnReloadTable')?.addEventListener('click', carregarDados);
-
-    // Navegação Sidebar
-    document.querySelectorAll('.nav-menu a[data-tab]').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            e.currentTarget.parentElement.classList.add('active');
-        });
-    });
-
-    // Modais - Abertura / Fechamento
     document.getElementById('btnOpenMovimentacao')?.addEventListener('click', () => UI.openModal('modalMovimentacao'));
     document.getElementById('btnOpenDanfe')?.addEventListener('click', () => UI.openModal('modalDanfe'));
 
     document.querySelectorAll('[data-close]').forEach(btn => {
         btn.addEventListener('click', () => UI.closeModal(btn.getAttribute('data-close')));
-    });
-
-    // Upload Container Event
-    const uploadContainer = document.getElementById('fileUploadContainer');
-    const fileInput = document.getElementById('arquivoDanfe');
-
-    uploadContainer?.addEventListener('click', () => fileInput?.click());
-    fileInput?.addEventListener('change', (e) => {
-        const fileName = e.target.files.length ? e.target.files[0].name : '';
-        document.getElementById('nomeArquivo').innerText = fileName;
-    });
-
-    // Submit Formulário Movimentação
-    document.getElementById('formMovimentacao')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const payload = {
-            tipo: document.getElementById('formTipo').value,
-            data: document.getElementById('formData').value,
-            fornecedor: document.getElementById('formFornecedor').value,
-            categoria: document.getElementById('formCategoria').value,
-            valor: parseFloat(document.getElementById('formValor').value)
-        };
-
-        STATE.transacoes.push(payload);
-        UI.populateSelectFilters();
-        aplicarFiltros();
-
-        e.target.reset();
-        UI.closeModal('modalMovimentacao');
-    });
-
-    // Submit DANFE
-    document.getElementById('formDanfe')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!fileInput.files.length) {
-            alert("Por favor, selecione um arquivo PDF ou Imagem.");
-            return;
-        }
-
-        const btn = document.getElementById('btnEnviarDanfe');
-        const origText = btn.innerText;
-        btn.innerText = 'Processando com IA...';
-        btn.disabled = true;
-
-        try {
-            const result = await ApiService.uploadDanfe(fileInput.files[0]);
-            alert(result.mensagem || 'Documento processado com sucesso!');
-            carregarDados();
-
-            e.target.reset();
-            document.getElementById('nomeArquivo').innerText = '';
-            UI.closeModal('modalDanfe');
-        } catch (err) {
-            alert(err.message);
-        } finally {
-            btn.innerText = origText;
-            btn.disabled = false;
-        }
     });
 });
