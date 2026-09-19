@@ -4,7 +4,7 @@
  * CONFIGURAÇÃO E ESTADO GLOBAL
  */
 const CONFIG = {
-    URL_ENTRADAS: 'https://script.google.com/macros/s/AKfycbzwFx41WOsrBhI9ydCNFSytfhfu47aL1yt0MVXYUDl4dPol4bjuHv10tYXks_LHSoDT/exec?aba=Entradas',
+    URL_ENTRADAS: 'https://script.google.com/macros/s/AKfycbzlDnsDfE-9BCky_F_ZT6EKHHHo5I9b-xQA-9FrmD9RIw6J2VMAwszSmOv1WOBTG224/exec',
     URL_SAIDAS: 'https://script.google.com/macros/s/AKfycbzwFx41WOsrBhI9ydCNFSytfhfu47aL1yt0MVXYUDl4dPol4bjuHv10tYXks_LHSoDT/exec?aba=Saidas',
     URL_N8N_UPLOAD: '/api/upload'
 };
