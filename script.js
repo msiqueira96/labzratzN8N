@@ -28,8 +28,10 @@ const Formatters = {
         return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dateStr;
     },
 
-    normalizarTransacao(item, index) {
-        // Data
+normalizarTransacao(item, index) {
+        const isEntrada = item.abaOrigem === 'Entrada';
+
+        // 1. Tratamento da Data
         const rawData = String(item.data || '').trim();
         let dataFormatada = '';
         if (rawData) {
@@ -41,7 +43,7 @@ const Formatters = {
             }
         }
 
-        // Valor
+        // 2. Tratamento do Valor
         const rawValor = item.valor;
         let valorNum = 0;
         if (typeof rawValor === 'number') {
@@ -51,14 +53,29 @@ const Formatters = {
             valorNum = parseFloat(cleaned) || 0;
         }
 
+        // 3. Mapeamento de Fonte e Descrição
+        // Pega a 'fonte' (se for Entrada) ou 'fornecedor' (se for Saída)
+        const nomePrincipal = isEntrada ? String(item.fonte || 'Fonte não informada') : String(item.fornecedor || 'Fornecedor não informado');
+        
+        // Pega a 'descrição' (se for Entrada) ou 'operador/detalhes' (se for Saída)
+        const detalhesExtras = isEntrada ? String(item.descrição || item.descricao || '') : String(item.Operador || item.operador || '');
+        
+        // Junta a Fonte e a Descrição. Ex: "Mercado Pago - Venda de fone de ouvido"
+        let textoExibicao = nomePrincipal;
+        if (detalhesExtras && detalhesExtras.trim() !== '') {
+            textoExibicao += ` - ${detalhesExtras}`; 
+        }
+
+        const categoriaFinal = String(item.categoria || 'Geral');
+
         return {
-            id: String(item.id || ''),
+            id: String(item.id || index), 
             data: dataFormatada,
-            fornecedor: String(item.fornecedor || ''),
+            fornecedor: textoExibicao, // A tabela e os filtros leem daqui, então passamos o texto completo!
             cnpj: String(item.cnpj || ''),
-            operador: String(item.Operador || item.operador || ''),
+            operador: detalhesExtras,
             formaPagamento: String(item['forma de pagamento'] || ''),
-            categoria: 'Geral',
+            categoria: categoriaFinal,
             tipo: String(item.abaOrigem || ''),
             valor: Math.abs(valorNum)
         };
