@@ -28,7 +28,7 @@ const Formatters = {
         return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dateStr;
     },
 
-normalizarTransacao(item, index) {
+    normalizarTransacao(item, index) {
         const isEntrada = item.abaOrigem === 'Entrada';
 
         // 1. Tratamento da Data
@@ -71,7 +71,7 @@ normalizarTransacao(item, index) {
         return {
             id: String(item.id || index), 
             data: dataFormatada,
-            fornecedor: textoExibicao, // A tabela e os filtros leem daqui, então passamos o texto completo!
+            fornecedor: textoExibicao, // A tabela e os filtros leem daqui
             cnpj: String(item.cnpj || ''),
             operador: detalhesExtras,
             formaPagamento: String(item['forma de pagamento'] || ''),
@@ -249,17 +249,55 @@ const ChartManager = {
         const canvas = document.getElementById('chartCategoriasDonut');
         if (!canvas) return;
 
+        const labels = Object.keys(fornMap);
+        const dataValues = Object.values(fornMap);
+        
+        // Paleta de cores expandida para lidar com muitos fornecedores
+        const bgColors = ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#06b6d4', '#14b8a6', '#10b981', '#84cc16', '#f59e0b', '#f97316'];
+
         STATE.charts.donut = new Chart(canvas.getContext('2d'), {
             type: 'doughnut',
             data: {
-                labels: Object.keys(fornMap),
+                labels: labels,
                 datasets: [{
-                    data: Object.values(fornMap),
-                    backgroundColor: ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#06b6d4']
+                    data: dataValues,
+                    backgroundColor: bgColors,
+                    borderWidth: 1
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false 
+                    }
+                },
+                cutout: '65%'
+            }
         });
+
+        const legendDiv = document.getElementById('legendCategorias');
+        if (legendDiv) {
+            let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+            
+            labels.forEach((label, i) => {
+                const color = bgColors[i % bgColors.length];
+                const valorFormatado = Formatters.currency(dataValues[i]);
+                
+                html += `
+                    <li style="display: flex; align-items: center; margin-bottom: 10px; cursor: default;" title="${label} | Total: ${valorFormatado}">
+                        <span style="width: 12px; height: 12px; background-color: ${color}; border-radius: 3px; margin-right: 8px; flex-shrink: 0;"></span>
+                        <span style="color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;">
+                            ${label}
+                        </span>
+                    </li>
+                `;
+            });
+            
+            html += '</ul>';
+            legendDiv.innerHTML = html;
+        }
     },
 
     renderProportionPie(dados) {
@@ -371,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. Envio seguro do arquivo interceptando o formulário (previne recarregar a página)
+    // 3. Envio seguro do arquivo interceptando o formulário
     if (formDanfe) {
         formDanfe.addEventListener('submit', async (e) => {
             e.preventDefault(); 
