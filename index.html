@@ -7,8 +7,7 @@
     <title>Dashboard Financeiro | Fluxo de Caixa</title>
 
     <!-- Google Fonts & Chart.js -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Estilos Separados -->
@@ -198,16 +197,8 @@
                             </div>
                         </div>
 
-                        <div class="chart-split-box">
-                            <div class="yaxis-fixed-panel">
-                                <canvas id="chartYAxisCanvas"></canvas>
-                            </div>
-
-                            <div class="bars-scrollable-area" id="barsScrollArea">
-                                <div class="bars-scrollable-inner" id="barsInnerContainer">
-                                    <canvas id="chartBarsCanvas"></canvas>
-                                </div>
-                            </div>
+                        <div class="chart-container" style="height: 280px;">
+                            <canvas id="chartBarsCanvas"></canvas>
                         </div>
                     </div>
 
@@ -216,19 +207,11 @@
                             <div class="chart-card-header">
                                 <h3>Despesas por Categoria</h3>
                             </div>
-                            <!-- Container ajustado com Flexbox para separar Gráfico e Legenda -->
-                            <div class="chart-container" style="display: flex; align-items: center; height: 260px;">
-                                
-                                <!-- Área do Gráfico -->
+                            <div class="chart-container" style="display: flex; align-items: center; height: 220px;">
                                 <div style="flex: 1; height: 100%; position: relative;">
                                     <canvas id="chartCategoriasDonut"></canvas>
                                 </div>
-
-                                <!-- Área da Legenda com Scroller -->
-                                <div id="legendCategorias" style="flex: 1; max-height: 240px; overflow-y: auto; padding-left: 15px; font-size: 0.75rem;">
-                                    <!-- A legenda será injetada aqui pelo JavaScript -->
-                                </div>
-
+                                <div id="legendCategorias" style="flex: 1; max-height: 200px; overflow-y: auto; padding-left: 15px; font-size: 0.75rem;"></div>
                             </div>
                         </div>
 
@@ -236,7 +219,7 @@
                             <div class="chart-card-header">
                                 <h3>Proporção Entrada x Saída</h3>
                             </div>
-                            <div class="chart-container">
+                            <div class="chart-container" style="height: 220px;">
                                 <canvas id="chartProporcaoPie"></canvas>
                             </div>
                         </div>
@@ -295,102 +278,96 @@
     </div>
 
     <!-- Modais -->
-    <!-- Modal Nova Movimentação -->
-<div id="modalMovimentacao" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>Nova Movimentação</h3>
-      <button class="btn-close" data-close="modalMovimentacao">&times;</button>
+    <div id="modalMovimentacao" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Nova Movimentação</h3>
+                <button class="close-btn" data-close="modalMovimentacao">&times;</button>
+            </div>
+
+            <div class="upload-ai-box">
+                <small style="display: block; color: #64748b; margin-bottom: 6px;">Preencher automaticamente via Imagem/DANFE?</small>
+                <input type="file" id="aiFileInput" accept="image/*,.pdf" style="display: none;">
+                <button type="button" class="btn btn-secondary" id="btnTriggerAiUpload" style="padding: 6px 12px; font-size: 0.85rem;">
+                    📷 Carregar Comprovativo / DANFE
+                </button>
+                <span id="aiUploadStatus" style="display: block; font-size: 0.8rem; color: #2563eb; margin-top: 5px;"></span>
+            </div>
+
+            <form id="formMovimentacao">
+                <div class="form-group">
+                    <label for="formTipo">Tipo de Transação</label>
+                    <select id="formTipo" class="form-control" required>
+                        <option value="Entrada">Entrada</option>
+                        <option value="Saída" selected>Saída</option>
+                    </select>
+                </div>
+
+                <div id="groupEntrada" style="display: none;">
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="entData" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Fonte</label>
+                        <input type="text" id="entFonte" class="form-control" placeholder="Ex: Cliente X, Vendas em Loja">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <input type="text" id="entCategoria" class="form-control" placeholder="Ex: Insumos, Vendas">
+                    </div>
+                    <div class="form-group">
+                        <label>Operador</label>
+                        <input type="text" id="entOperador" class="form-control" placeholder="Nome do operador">
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <input type="text" id="entDescricao" class="form-control" placeholder="Detalhes da movimentação">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor (R$)</label>
+                        <input type="number" step="0.01" id="entValor" class="form-control" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div id="groupSaida">
+                    <div class="form-group">
+                        <label>ID / Nº Pedido</label>
+                        <input type="text" id="saiId" class="form-control" placeholder="Ex: 96">
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="saiData" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Fornecedor</label>
+                        <input type="text" id="saiFornecedor" class="form-control" placeholder="Ex: Distribuidora Lemes Ltda">
+                    </div>
+                    <div class="form-group">
+                        <label>CNPJ</label>
+                        <input type="text" id="saiCnpj" class="form-control" placeholder="00.000.000/0000-00">
+                    </div>
+                    <div class="form-group">
+                        <label>Operador</label>
+                        <input type="text" id="saiOperador" class="form-control" placeholder="Nome do operador">
+                    </div>
+                    <div class="form-group">
+                        <label>Forma de Pagamento</label>
+                        <input type="text" id="saiFormaPagamento" class="form-control" placeholder="Ex: Em Mãos, PIX, Cartão">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor (R$)</label>
+                        <input type="number" step="0.01" id="saiValor" class="form-control" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" data-close="modalMovimentacao">Cancelar</button>
+                    <button type="submit" id="btnSalvarRegistro" class="btn btn-primary">Salvar Registro</button>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <!-- ÁREA DE UPLOAD INTELIGENTE (IA / n8n) -->
-    <div class="upload-ai-box" style="margin-bottom: 15px; background: #f8fafc; padding: 10px; border: 1px dashed #cbd5e1; border-radius: 8px; text-align: center;">
-      <small style="display: block; color: #64748b; margin-bottom: 6px;">Preencher automaticamente via Imagem/DANFE?</small>
-      <input type="file" id="aiFileInput" accept="image/*,.pdf" style="display: none;">
-      <button type="button" class="btn-secondary" id="btnTriggerAiUpload" style="padding: 6px 12px; font-size: 0.85rem;">
-        📷 Carregar Comprovativo / DANFE
-      </button>
-      <span id="aiUploadStatus" style="display: block; font-size: 0.8rem; color: #3b82f6; margin-top: 5px;"></span>
-    </div>
-
-    <form id="formMovimentacao">
-      <!-- TIPO DE TRANSAÇÃO -->
-      <div class="form-group">
-        <label for="formTipo">Tipo de Transação</label>
-        <select id="formTipo" class="form-control" required>
-          <option value="Entrada">Entrada</option>
-          <option value="Saída">Saída</option>
-        </select>
-      </div>
-
-      <!-- CAMPOS ESPECÍFICOS DE ENTRADA -->
-      <div id="groupEntrada">
-        <div class="form-group">
-          <label>Data</label>
-          <input type="date" id="entData" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>Fonte</label>
-          <input type="text" id="entFonte" class="form-control" placeholder="Ex: Cliente X, Vendas em Loja">
-        </div>
-        <div class="form-group">
-          <label>Categoria</label>
-          <input type="text" id="entCategoria" class="form-control" placeholder="Ex: Insumos, Vendas">
-        </div>
-        <div class="form-group">
-          <label>Operador</label>
-          <input type="text" id="entOperador" class="form-control" placeholder="Nome do operador">
-        </div>
-        <div class="form-group">
-          <label>Descrição</label>
-          <input type="text" id="entDescricao" class="form-control" placeholder="Detalhes da movimentação">
-        </div>
-        <div class="form-group">
-          <label>Valor (R$)</label>
-          <input type="number" step="0.01" id="entValor" class="form-control" placeholder="0.00">
-        </div>
-      </div>
-
-      <!-- CAMPOS ESPECÍFICOS DE SAÍDA -->
-      <div id="groupSaida" style="display: none;">
-        <div class="form-group">
-          <label>ID / Nº Pedido</label>
-          <input type="text" id="saiId" class="form-control" placeholder="Ex: 96">
-        </div>
-        <div class="form-group">
-          <label>Data</label>
-          <input type="date" id="saiData" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>Fornecedor</label>
-          <input type="text" id="saiFornecedor" class="form-control" placeholder="Ex: Distribuidora Lemes Ltda">
-        </div>
-        <div class="form-group">
-          <label>CNPJ</label>
-          <input type="text" id="saiCnpj" class="form-control" placeholder="00.000.000/0000-00">
-        </div>
-        <div class="form-group">
-          <label>Operador</label>
-          <input type="text" id="saiOperador" class="form-control" placeholder="Nome do operador">
-        </div>
-        <div class="form-group">
-          <label>Forma de Pagamento</label>
-          <input type="text" id="saiFormaPagamento" class="form-control" placeholder="Ex: Em Mãos, PIX, Cartão">
-        </div>
-        <div class="form-group">
-          <label>Valor (R$)</label>
-          <input type="number" step="0.01" id="saiValor" class="form-control" placeholder="0.00">
-        </div>
-      </div>
-
-      <!-- BOTÕES DE AÇÃO -->
-      <div class="modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-secondary" data-close="modalMovimentacao">Cancelar</button>
-        <button type="submit" id="btnSalvarRegistro" class="btn-primary">Salvar Registro</button>
-      </div>
-    </form>
-  </div>
-</div>
 
     <div class="modal-overlay" id="modalDanfe">
         <div class="modal-box">
@@ -400,8 +377,7 @@
             </div>
             <form id="formDanfe">
                 <p class="modal-info-text">
-                    O arquivo será processado via Webhook n8n para envio ao Google Drive e extração automatizada de
-                    dados.
+                    O arquivo será processado via Webhook n8n para envio ao Google Drive e extração automatizada de dados.
                 </p>
                 <div class="file-upload-area" id="fileUploadContainer">
                     <svg width="36" height="36" fill="none" stroke="var(--blue)" viewBox="0 0 24 24">
