@@ -31,7 +31,6 @@ const Formatters = {
     normalizarTransacao(item, index) {
         const isEntrada = item.abaOrigem === 'Entrada';
 
-        // 1. Tratamento da Data
         const rawData = String(item.data || '').trim();
         let dataFormatada = '';
         if (rawData) {
@@ -43,7 +42,6 @@ const Formatters = {
             }
         }
 
-        // 2. Tratamento do Valor
         const rawValor = item.valor;
         let valorNum = 0;
         if (typeof rawValor === 'number') {
@@ -53,7 +51,6 @@ const Formatters = {
             valorNum = parseFloat(cleaned) || 0;
         }
 
-        // 3. Mapeamento de Fonte e Descrição
         const nomePrincipal = isEntrada ? String(item.fonte || 'Fonte não informada') : String(item.fornecedor || 'Fornecedor não informado');
         const detalhesExtras = isEntrada ? String(item.descrição || item.descricao || '') : String(item.Operador || item.operador || '');
         
@@ -114,24 +111,42 @@ const ApiService = {
 };
 
 /**
- * EXIBIÇÃO NA TABELA E MODAIS
+ * GESTÃO DE UI E MODAIS
  */
 const UI = {
     openModal(id) {
-        const modal = document.getElementById(id);
+        // Busca o elemento por ID exato ou variação comum
+        let modal = document.getElementById(id);
+        if (!modal) {
+            modal = document.getElementById('modal-movimentacao') || 
+                    document.getElementById('modalNovaMovimentacao') || 
+                    document.querySelector('.modal-overlay');
+        }
+
         if (modal) {
             modal.classList.add('active');
-            modal.style.display = 'flex'; // Garantia dupla de exibição caso o CSS não use .active
+            modal.style.setProperty('display', 'flex', 'important');
+            
+            // Tenta atualizar a visibilidade dos campos do formulário
+            try {
+                atualizarCamposFormulario();
+            } catch (e) {
+                console.warn("Não foi possível atualizar os campos do formulário:", e);
+            }
         } else {
-            console.warn(`[UI] Modal com id "${id}" não foi encontrado no HTML.`);
+            console.error(`[Erro UI] Nenhum modal foi encontrado com o ID "${id}".`);
         }
     },
 
     closeModal(id) {
-        const modal = document.getElementById(id);
+        let modal = document.getElementById(id);
+        if (!modal) {
+            modal = document.querySelector('.modal-overlay.active') || document.querySelector('.modal-overlay');
+        }
+
         if (modal) {
             modal.classList.remove('active');
-            modal.style.display = 'none';
+            modal.style.setProperty('display', 'none', 'important');
         }
     },
 
@@ -201,6 +216,11 @@ const UI = {
         if (fornecedores.includes(valAtual)) selectForn.value = valAtual;
     }
 };
+
+// EXPOSIÇÃO GLOBAL DE FUNÇÕES (Garante funcionamento de onclick no HTML)
+window.UI = UI;
+window.openModal = (id) => UI.openModal(id);
+window.closeModal = (id) => UI.closeModal(id);
 
 /**
  * GRÁFICOS
@@ -367,7 +387,7 @@ async function carregarDados() {
 }
 
 /**
- * LÓGICA DO FORMULÁRIO DINÂMICO E PREENCHIMENTO POR IA
+ * LÓGICA DO FORMULÁRIO DINÂMICO E IA
  */
 function atualizarCamposFormulario() {
     const tipo = document.getElementById('formTipo')?.value || 'Saída';
@@ -433,7 +453,7 @@ function obterDadosFormulario() {
 }
 
 /**
- * INICIALIZAÇÃO E EVENTOS
+ * INICIALIZAÇÃO E DELEGAÇÃO DE EVENTOS
  */
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof Chart !== 'undefined') {
@@ -448,25 +468,26 @@ document.addEventListener('DOMContentLoaded', () => {
         .forEach(id => document.getElementById(id)?.addEventListener('change', aplicarFiltros));
     document.getElementById('btnReloadTable')?.addEventListener('click', carregarDados);
 
-    // Evento para abrir o modal de Movimentação (Busca por múltiplos IDs possíveis)
-    const btnOpen = document.getElementById('btnOpenMovimentacao') || document.getElementById('btnNovaMovimentacao');
-    if (btnOpen) {
-        btnOpen.addEventListener('click', () => {
+    // DELEGAÇÃO DE EVENTOS GLOBAL PARA BOTÕES DE MODAL
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button, a, .btn');
+        if (!btn) return;
+
+        // Se o botão contém texto ou atributos sobre "Movimentação"
+        const texto = btn.innerText?.toLowerCase() || '';
+        const id = btn.id || '';
+
+        if (id === 'btnOpenMovimentacao' || id === 'btnNovaMovimentacao' || texto.includes('movimentação') || texto.includes('movimentacao')) {
             UI.openModal('modalMovimentacao');
-            try {
-                atualizarCamposFormulario();
-            } catch (err) {
-                console.error("Erro ao alternar campos do formulário:", err);
-            }
-        });
-    }
+        } else if (id === 'btnOpenDanfe' || texto.includes('danfe') || texto.includes('upload')) {
+            UI.openModal('modalDanfe');
+        }
 
-    // Modal Danfe / Upload
-    document.getElementById('btnOpenDanfe')?.addEventListener('click', () => UI.openModal('modalDanfe'));
-
-    // Botões de fechar modais
-    document.querySelectorAll('[data-close]').forEach(btn => {
-        btn.addEventListener('click', () => UI.closeModal(btn.getAttribute('data-close')));
+        // Suporte a fechamento
+        const closeAttr = btn.getAttribute('data-close');
+        if (closeAttr) {
+            UI.closeModal(closeAttr);
+        }
     });
 
     // Alternância do Tipo de Transação (Entrada / Saída)
