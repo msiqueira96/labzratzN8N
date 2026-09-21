@@ -295,50 +295,102 @@
     </div>
 
     <!-- Modais -->
-    <div class="modal-overlay" id="modalMovimentacao">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>Nova Movimentação</h3>
-                <button class="close-btn" data-close="modalMovimentacao">&times;</button>
-            </div>
-            <form id="formMovimentacao">
-                <div class="form-group">
-                    <label for="formTipo">Tipo de Transação</label>
-                    <select class="form-control" id="formTipo" required>
-                        <option value="Entrada">Entrada</option>
-                        <option value="Saída">Saída</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="formData">Data</label>
-                    <input type="date" class="form-control" id="formData" required>
-                </div>
-                <div class="form-group">
-                    <label for="formFornecedor">Fonte / Fornecedor</label>
-                    <input type="text" class="form-control" id="formFornecedor"
-                        placeholder="Ex: Mercado Livre / Cliente X" required>
-                </div>
-                <div class="form-group">
-                    <label for="formCategoria">Categoria</label>
-                    <input type="text" class="form-control" id="formCategoria"
-                        placeholder="Ex: Insumos, Serviços, Vendas" required>
-                </div>
-                <div class="form-group">
-                    <label for="formDescricao">Descrição / Detalhes</label>
-                    <input type="text" class="form-control" id="formDescricao"
-                        placeholder="Ex: Detalhes da venda ou nome do Operador">
-                </div>
-                <div class="form-group">
-                    <label for="formValor">Valor (R$)</label>
-                    <input type="number" step="0.01" class="form-control" id="formValor" placeholder="0.00" required>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" data-close="modalMovimentacao">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btnSalvarMov">Salvar Registro</button>
-                </div>
-            </form>
-        </div>
+    <!-- Modal Nova Movimentação -->
+<div id="modalMovimentacao" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Nova Movimentação</h3>
+      <button class="btn-close" data-close="modalMovimentacao">&times;</button>
     </div>
+
+    <!-- ÁREA DE UPLOAD INTELIGENTE (IA / n8n) -->
+    <div class="upload-ai-box" style="margin-bottom: 15px; background: #f8fafc; padding: 10px; border: 1px dashed #cbd5e1; border-radius: 8px; text-align: center;">
+      <small style="display: block; color: #64748b; margin-bottom: 6px;">Preencher automaticamente via Imagem/DANFE?</small>
+      <input type="file" id="aiFileInput" accept="image/*,.pdf" style="display: none;">
+      <button type="button" class="btn-secondary" id="btnTriggerAiUpload" style="padding: 6px 12px; font-size: 0.85rem;">
+        📷 Carregar Comprovativo / DANFE
+      </button>
+      <span id="aiUploadStatus" style="display: block; font-size: 0.8rem; color: #3b82f6; margin-top: 5px;"></span>
+    </div>
+
+    <form id="formMovimentacao">
+      <!-- TIPO DE TRANSAÇÃO -->
+      <div class="form-group">
+        <label for="formTipo">Tipo de Transação</label>
+        <select id="formTipo" class="form-control" required>
+          <option value="Entrada">Entrada</option>
+          <option value="Saída">Saída</option>
+        </select>
+      </div>
+
+      <!-- CAMPOS ESPECÍFICOS DE ENTRADA -->
+      <div id="groupEntrada">
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="entData" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Fonte</label>
+          <input type="text" id="entFonte" class="form-control" placeholder="Ex: Cliente X, Vendas em Loja">
+        </div>
+        <div class="form-group">
+          <label>Categoria</label>
+          <input type="text" id="entCategoria" class="form-control" placeholder="Ex: Insumos, Vendas">
+        </div>
+        <div class="form-group">
+          <label>Operador</label>
+          <input type="text" id="entOperador" class="form-control" placeholder="Nome do operador">
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" id="entDescricao" class="form-control" placeholder="Detalhes da movimentação">
+        </div>
+        <div class="form-group">
+          <label>Valor (R$)</label>
+          <input type="number" step="0.01" id="entValor" class="form-control" placeholder="0.00">
+        </div>
+      </div>
+
+      <!-- CAMPOS ESPECÍFICOS DE SAÍDA -->
+      <div id="groupSaida" style="display: none;">
+        <div class="form-group">
+          <label>ID / Nº Pedido</label>
+          <input type="text" id="saiId" class="form-control" placeholder="Ex: 96">
+        </div>
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="saiData" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Fornecedor</label>
+          <input type="text" id="saiFornecedor" class="form-control" placeholder="Ex: Distribuidora Lemes Ltda">
+        </div>
+        <div class="form-group">
+          <label>CNPJ</label>
+          <input type="text" id="saiCnpj" class="form-control" placeholder="00.000.000/0000-00">
+        </div>
+        <div class="form-group">
+          <label>Operador</label>
+          <input type="text" id="saiOperador" class="form-control" placeholder="Nome do operador">
+        </div>
+        <div class="form-group">
+          <label>Forma de Pagamento</label>
+          <input type="text" id="saiFormaPagamento" class="form-control" placeholder="Ex: Em Mãos, PIX, Cartão">
+        </div>
+        <div class="form-group">
+          <label>Valor (R$)</label>
+          <input type="number" step="0.01" id="saiValor" class="form-control" placeholder="0.00">
+        </div>
+      </div>
+
+      <!-- BOTÕES DE AÇÃO -->
+      <div class="modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn-secondary" data-close="modalMovimentacao">Cancelar</button>
+        <button type="submit" id="btnSalvarRegistro" class="btn-primary">Salvar Registro</button>
+      </div>
+    </form>
+  </div>
+</div>
 
     <div class="modal-overlay" id="modalDanfe">
         <div class="modal-box">
