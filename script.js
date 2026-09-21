@@ -93,8 +93,8 @@ const ApiService = {
 
     async uploadDanfe(file) {
         const formData = new FormData();
+        // Apenas um anexo para evitar o duplo envio ao n8n
         formData.append('file', file);
-        formData.append('arquivo', file);
 
         const res = await fetch(CONFIG.URL_N8N_UPLOAD, { method: 'POST', body: formData });
         let data = {};
@@ -411,18 +411,23 @@ function atualizarCamposFormulario() {
     if (groupSaida) groupSaida.style.display = (tipo === 'Entrada') ? 'none' : 'block';
 }
 
+function limparCamposFormulario() {
+    const form = document.getElementById('formMovimentacao');
+    if (form) form.reset();
+    
+    const selectTipoDoc = document.getElementById('tipoDocumento');
+    if (selectTipoDoc) selectTipoDoc.value = '';
+}
+
 function preencherCamposComIA(respostaIa) {
-    // Extrai o objeto de dados seja da propriedade `data` ou da raiz
     const item = respostaIa.data || respostaIa;
 
-    // 1. Define o Tipo de Transação (padrão 'Saída')
     const selectTipoTransacao = document.getElementById('formTipo');
     if (selectTipoTransacao) {
         selectTipoTransacao.value = item.tipoTransacao || 'Saída';
         atualizarCamposFormulario();
     }
 
-    // 2. Preenche o novo campo: Tipo de Documento
     const rawTipoDoc = item.tipoDocumento || item.tipo_documento || item.tipo;
     if (rawTipoDoc) {
         const selectTipoDoc = document.getElementById('tipoDocumento');
@@ -433,7 +438,6 @@ function preencherCamposComIA(respostaIa) {
         }
     }
 
-    // 3. Preenche os demais campos com base no tipo
     if (item.id) document.getElementById('saiId').value = item.id;
     if (item.data) document.getElementById('saiData').value = item.data;
     if (item.fornecedor) document.getElementById('saiFornecedor').value = item.fornecedor;
@@ -484,14 +488,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     carregarDados();
 
-    // Listeners dos Filtros
     ['filtroInicio', 'filtroFim', 'filtroTipo', 'headerFiltroFornecedor', 'headerFiltroCategoria', 'headerFiltroTipo']
         .forEach(id => document.getElementById(id)?.addEventListener('change', aplicarFiltros));
 
     document.getElementById('btnResetarFiltros')?.addEventListener('click', resetarFiltros);
     document.getElementById('btnReloadTable')?.addEventListener('click', carregarDados);
 
-    // Delegação de cliques para botões de abrir/fechar modais
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('button, a, .btn');
         if (!btn) return;
@@ -527,6 +529,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             if (aiStatus) aiStatus.innerText = '🤖 Lendo documento com IA...';
             if (btnTriggerAi) btnTriggerAi.disabled = true;
+
+            // Limpa os campos antigos antes de receber o novo documento
+            limparCamposFormulario();
 
             const dadosExtraidos = await ApiService.uploadDanfe(file);
             preencherCamposComIA(dadosExtraidos);
