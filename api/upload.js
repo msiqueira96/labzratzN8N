@@ -16,6 +16,7 @@ export default async function handler(req, res) {
     }
     const buffer = Buffer.concat(chunks);
 
+    // Webhook atualizado para a captura de documentos
     const n8nUrl = new URL('https://webhook.labzratz.tech/webhook/upload-document');
 
     const options = {
@@ -27,7 +28,7 @@ export default async function handler(req, res) {
         'Content-Type': req.headers['content-type'],
         'Content-Length': buffer.length
       },
-      rejectUnauthorized: false // Ignora o erro de certificado SSL autoassinado/inseguro
+      rejectUnauthorized: false // Ignora inconsistências de certificado SSL autoassinado/inseguro
     };
 
     const n8nReq = https.request(options, (n8nRes) => {
