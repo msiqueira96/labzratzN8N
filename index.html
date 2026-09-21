@@ -1,404 +1,268 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Financeiro | Fluxo de Caixa</title>
-
-    <!-- Google Fonts & Chart.js -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Estilos Separados -->
+    <title>FLUXO 2.0 - Controle Financeiro</title>
+    <!-- CSS Principal -->
     <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js para Gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
 
+    <!-- Estrutura Principal / Dashboard -->
     <div class="app-container">
-
-        <!-- Sidebar / Navegação -->
+        
+        <!-- Sidebar Navigation -->
         <aside class="sidebar">
-            <div>
-                <div class="brand">
-                    <div class="brand-logo">F</div>
-                    <div class="brand-text">
-                        <h2>FLUXO 2.0</h2>
-                        <span>CONTROL PANEL</span>
-                    </div>
-                </div>
-
-                <ul class="nav-menu">
-                    <li class="nav-item active">
-                        <a href="#" data-tab="dashboard">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
-                                </path>
-                            </svg>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" data-tab="entradas">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            Entradas
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" data-tab="saidas">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4">
-                                </path>
-                            </svg>
-                            Saídas
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" id="btnOpenDanfe">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
-                                </path>
-                            </svg>
-                            Upload DANFE
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" data-tab="config">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                                </path>
-                            </svg>
-                            Configurações
-                        </a>
-                    </li>
-                </ul>
+            <div class="logo-container">
+                <i class="fa-solid fa-chart-line logo-icon"></i>
+                <h2>FLUXO 2.0</h2>
             </div>
 
-            <div class="user-card">
-                <div class="avatar">OP</div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fa-solid fa-arrow-down-long"></i>
+                    <span>Entradas</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fa-solid fa-arrow-up-long"></i>
+                    <span>Saídas</span>
+                </a>
+                <a href="#" class="nav-item" onclick="abrirModal()">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>Upload DANFE</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Configurações</span>
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar"><i class="fa-solid fa-user"></i></div>
                 <div class="user-info">
-                    <h4>Operador Caixas</h4>
-                    <p>Permissão: Acesso Total</p>
+                    <span class="user-name">Operador Caixa</span>
+                    <span class="user-role">Administrador</span>
                 </div>
             </div>
         </aside>
 
         <!-- Conteúdo Principal -->
         <main class="main-content">
-
-            <header class="top-header">
-                <div class="header-title">
-                    <h1>Fluxo de Caixa <span>Dashboard</span></h1>
-                    <p class="header-subtitle">Acompanhamento e extração automatizada via n8n</p>
+            
+            <!-- Topbar / Cabeçalho -->
+            <header class="topbar">
+                <div class="page-title">
+                    <h1>FLUXO DE CAIXA</h1>
                 </div>
-                <div class="header-actions">
-                    <button class="btn btn-secondary" id="btnResetarFiltros">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                            </path>
-                        </svg>
-                        Resetar Filtros
-                    </button>
-                    <button class="btn btn-primary" id="btnOpenMovimentacao">
-                        + Nova Movimentação
+                <div class="topbar-actions">
+                    <button class="btn-primary" onclick="abrirModal()">
+                        <i class="fa-solid fa-plus"></i> Nova Movimentação
                     </button>
                 </div>
             </header>
 
-            <div class="filter-bar">
-                <div class="filter-group">
-                    <label for="filtroInicio">Início:</label>
-                    <input type="date" id="filtroInicio">
-                    <label for="filtroFim" class="ml-12">Fim:</label>
-                    <input type="date" id="filtroFim">
-                </div>
-                <div class="filter-group">
-                    <label for="filtroTipo">Tipo (Visão Geral):</label>
-                    <select id="filtroTipo">
-                        <option value="Tudo">Todos os Lançamentos</option>
-                        <option value="Entrada">Somente Entradas</option>
-                        <option value="Saída">Somente Saídas</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="dashboard-grid">
-
-                <div class="kpi-column">
-                    <div class="kpi-card highlight">
-                        <div class="kpi-header">
-                            <h3>SALDO NO PERÍODO</h3>
-                            <svg width="18" height="18" fill="none" stroke="#93c5fd" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
-                                </path>
-                            </svg>
-                        </div>
-                        <div class="kpi-value" id="kpiSaldo">R$ 0,00</div>
-                        <div class="kpi-subtext">
-                            <div class="sub-item">
-                                <span>Status Atual</span>
-                                <strong id="kpiStatusSaldo">Consolidado</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3>TOTAL ENTRADAS</h3>
-                            <svg width="18" height="18" fill="none" stroke="#10b981" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                            </svg>
-                        </div>
-                        <div class="kpi-value val-entrada" id="kpiEntradas">R$ 0,00</div>
-                        <div class="kpi-subtext">
-                            <div class="sub-item">
-                                <span>Maior Entrada</span>
-                                <strong id="kpiMaiorEntrada">R$ 0,00</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3>TOTAL SAÍDAS</h3>
-                            <svg width="18" height="18" fill="none" stroke="#f43f5e" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"></path>
-                            </svg>
-                        </div>
-                        <div class="kpi-value val-saida" id="kpiSaidas">R$ 0,00</div>
-                        <div class="kpi-subtext">
-                            <div class="sub-item">
-                                <span>Maior Despesa</span>
-                                <strong id="kpiMaiorSaida">R$ 0,00</strong>
-                            </div>
-                        </div>
+            <!-- Cards de KPIs -->
+            <section class="kpi-grid">
+                <div class="kpi-card saldo">
+                    <div class="kpi-icon"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="kpi-data">
+                        <span class="kpi-title">Saldo Total</span>
+                        <h3 id="kpiSaldo">R$ 0,00</h3>
                     </div>
                 </div>
 
-                <div class="charts-column">
-
-                    <div class="chart-card">
-                        <div class="chart-card-header">
-                            <h3>Fluxo por Período (Entradas vs Saídas)</h3>
-                            <div class="chart-legend-fixed">
-                                <span class="legend-item"><span class="legend-box entrada"></span> Entradas</span>
-                                <span class="legend-item"><span class="legend-box saida"></span> Saídas</span>
-                            </div>
-                        </div>
-
-                        <div class="chart-container" style="height: 280px;">
-                            <canvas id="chartBarsCanvas"></canvas>
-                        </div>
+                <div class="kpi-card entradas">
+                    <div class="kpi-icon"><i class="fa-solid fa-circle-arrow-down"></i></div>
+                    <div class="kpi-data">
+                        <span class="kpi-title">Total Entradas</span>
+                        <h3 id="kpiEntradas">R$ 0,00</h3>
                     </div>
-
-                    <div class="two-charts-row">
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <h3>Despesas por Categoria</h3>
-                            </div>
-                            <div class="chart-container" style="display: flex; align-items: center; height: 220px;">
-                                <div style="flex: 1; height: 100%; position: relative;">
-                                    <canvas id="chartCategoriasDonut"></canvas>
-                                </div>
-                                <div id="legendCategorias" style="flex: 1; max-height: 200px; overflow-y: auto; padding-left: 15px; font-size: 0.75rem;"></div>
-                            </div>
-                        </div>
-
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <h3>Proporção Entrada x Saída</h3>
-                            </div>
-                            <div class="chart-container" style="height: 220px;">
-                                <canvas id="chartProporcaoPie"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
 
-            </div>
-
-            <div class="table-card">
-                <div class="table-card-header">
-                    <h3>Últimas Transações Registradas</h3>
-                    <button class="btn btn-secondary" id="btnReloadTable">Atualizar Tabela</button>
+                <div class="kpi-card saidas">
+                    <div class="kpi-icon"><i class="fa-solid fa-circle-arrow-up"></i></div>
+                    <div class="kpi-data">
+                        <span class="kpi-title">Total Saídas</span>
+                        <h3 id="kpiSaidas">R$ 0,00</h3>
+                    </div>
                 </div>
-                <div class="table-scroll-container">
-                    <table>
+
+                <div class="kpi-card destaques">
+                    <div class="kpi-icon"><i class="fa-solid fa-star"></i></div>
+                    <div class="kpi-data">
+                        <span class="kpi-title">Maior Lançamento</span>
+                        <h3 id="kpiMaiorValor">R$ 0,00</h3>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção de Gráficos -->
+            <section class="charts-section">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Visão Geral de Movimentações</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="meuGrafico"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filtros e Tabela de Lançamentos -->
+            <section class="table-section">
+                <div class="table-header">
+                    <h3>Todas as Movimentações</h3>
+                    
+                    <div class="filters-container">
+                        <input type="text" id="filtroBusca" placeholder="Buscar por fornecedor, operador...">
+                        <select id="filtroTipo">
+                            <option value="todos">Todos os Tipos</option>
+                            <option value="Entrada">Entradas</option>
+                            <option value="Saída">Saídas</option>
+                        </select>
+                        <input type="date" id="filtroDataInicio">
+                        <input type="date" id="filtroDataFim">
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="data-table">
                         <thead>
                             <tr>
+                                <th>Tipo</th>
+                                <th>ID / Doc</th>
                                 <th>Data</th>
-                                <th>
-                                    <div class="header-filter-wrapper">
-                                        <span>Fonte / Fornecedor</span>
-                                        <select id="headerFiltroFornecedor" class="header-filter-select">
-                                            <option value="Tudo">▼ Todos</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th>
-                                    <div class="header-filter-wrapper">
-                                        <span>Categoria</span>
-                                        <select id="headerFiltroCategoria" class="header-filter-select">
-                                            <option value="Tudo">▼ Todas</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th>
-                                    <div class="header-filter-wrapper">
-                                        <span>Tipo</span>
-                                        <select id="headerFiltroTipo" class="header-filter-select">
-                                            <option value="Tudo">▼ Todos</option>
-                                            <option value="Entrada">Entrada</option>
-                                            <option value="Saída">Saída</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th class="text-right">Valor</th>
+                                <th>Fornecedor / Fonte</th>
+                                <th>CNPJ / Categoria</th>
+                                <th>Operador</th>
+                                <th>Forma Pagto</th>
+                                <th>Valor</th>
                             </tr>
                         </thead>
-                        <tbody id="tabelaCorpo"></tbody>
+                        <tbody id="tabelaLancamentos">
+                            <!-- Preenchido via JavaScript -->
+                        </tbody>
                     </table>
                 </div>
-            </div>
+            </section>
 
         </main>
-
     </div>
 
-    <!-- Modais -->
-    <div id="modalMovimentacao" class="modal-overlay">
-        <div class="modal-box">
+    <!-- Modal Nova Movimentação -->
+    <div id="modalNovaMovimentacao" class="modal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3>Nova Movimentação</h3>
-                <button class="close-btn" data-close="modalMovimentacao">&times;</button>
+                <h2>Nova Movimentação</h2>
+                <button type="button" class="close-btn" onclick="fecharModal()">&times;</button>
             </div>
 
-            <div class="upload-ai-box">
-                <small style="display: block; color: #64748b; margin-bottom: 6px;">Preencher automaticamente via Imagem/DANFE?</small>
-                <input type="file" id="aiFileInput" accept="image/*,.pdf" style="display: none;">
-                <button type="button" class="btn btn-secondary" id="btnTriggerAiUpload" style="padding: 6px 12px; font-size: 0.85rem;">
-                    📷 Carregar Comprovativo / DANFE
-                </button>
-                <span id="aiUploadStatus" style="display: block; font-size: 0.8rem; color: #2563eb; margin-top: 5px;"></span>
+            <div class="modal-body">
+                <!-- Área de Upload de Comprovante/DANFE -->
+                <div class="upload-container">
+                    <p>Preencher automaticamente via Imagem/DANFE?</p>
+                    <label for="inputComprovante" class="upload-btn">
+                        <i class="fa-solid fa-camera"></i> Carregar Comprovante / DANFE
+                    </label>
+                    <input type="file" id="inputComprovante" accept="image/*,.pdf" style="display: none;">
+                    <span id="statusUploadText" class="status-text"></span>
+                </div>
+
+                <!-- Formulário de Lançamento -->
+                <form id="formMovimentacao" onsubmit="salvarMovimentacao(event)">
+                    
+                    <!-- 1. Tipo de Transação -->
+                    <div class="form-group">
+                        <label for="tipoTransacao">Tipo de Transação</label>
+                        <select id="tipoTransacao" name="tipoTransacao" required>
+                            <option value="Saída">Saída</option>
+                            <option value="Entrada">Entrada</option>
+                        </select>
+                    </div>
+
+                    <!-- 2. Tipo de Documento -->
+                    <div class="form-group">
+                        <label for="tipoDocumento">Tipo de Documento</label>
+                        <select id="tipoDocumento" name="tipoDocumento" required>
+                            <option value="">Selecione o tipo...</option>
+                            <option value="DANFE">DANFE (Nota Fiscal)</option>
+                            <option value="BOLETO">Boleto Bancário</option>
+                            <option value="CUPOM">Cupom Fiscal</option>
+                            <option value="RECIBO">Recibo</option>
+                            <option value="OUTROS">Outros</option>
+                        </select>
+                    </div>
+
+                    <!-- 3. ID / Nº Pedido / Chave de Acesso -->
+                    <div class="form-group">
+                        <label for="idPedido">ID / Nº Pedido / Chave de Acesso</label>
+                        <input type="text" id="idPedido" name="idPedido" placeholder="Ex: 35230912345678...">
+                    </div>
+
+                    <!-- 4. Data -->
+                    <div class="form-group">
+                        <label for="dataMovimentacao">Data</label>
+                        <input type="date" id="dataMovimentacao" name="dataMovimentacao" required>
+                    </div>
+
+                    <!-- 5. Fornecedor / Beneficiário / Fonte -->
+                    <div class="form-group">
+                        <label for="fornecedor">Fornecedor / Emitente / Fonte</label>
+                        <input type="text" id="fornecedor" name="fornecedor" placeholder="Ex: Distribuidora Lemes Ltda" required>
+                    </div>
+
+                    <!-- 6. CNPJ / Categoria -->
+                    <div class="form-group">
+                        <label for="cnpj">CNPJ / Categoria</label>
+                        <input type="text" id="cnpj" name="cnpj" placeholder="00.000.000/0000-00">
+                    </div>
+
+                    <!-- 7. Operador -->
+                    <div class="form-group">
+                        <label for="operador">Operador</label>
+                        <input type="text" id="operador" name="operador" placeholder="Nome do operador" required>
+                    </div>
+
+                    <!-- 8. Forma de Pagamento -->
+                    <div class="form-group">
+                        <label for="formaPagamento">Forma de Pagamento</label>
+                        <select id="formaPagamento" name="formaPagamento" required>
+                            <option value="Pix">Pix</option>
+                            <option value="Boleto">Boleto</option>
+                            <option value="Cartão de Crédito">Cartão de Crédito</option>
+                            <option value="Cartão de Débito">Cartão de Débito</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                            <option value="Transferência">Transferência</option>
+                        </select>
+                    </div>
+
+                    <!-- 9. Valor -->
+                    <div class="form-group">
+                        <label for="valorMovimentacao">Valor (R$)</label>
+                        <input type="number" id="valorMovimentacao" name="valorMovimentacao" step="0.01" placeholder="0,00" required>
+                    </div>
+
+                    <!-- Botões de Ação -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                        <button type="submit" id="btnSalvar" class="btn-salvar">Salvar Movimentação</button>
+                    </div>
+
+                </form>
             </div>
-
-            <form id="formMovimentacao">
-                <div class="form-group">
-                    <label for="formTipo">Tipo de Transação</label>
-                    <select id="formTipo" class="form-control" required>
-                        <option value="Entrada">Entrada</option>
-                        <option value="Saída" selected>Saída</option>
-                    </select>
-                </div>
-
-                <div id="groupEntrada" style="display: none;">
-                    <div class="form-group">
-                        <label>Data</label>
-                        <input type="date" id="entData" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label>Fonte</label>
-                        <input type="text" id="entFonte" class="form-control" placeholder="Ex: Cliente X, Vendas em Loja">
-                    </div>
-                    <div class="form-group">
-                        <label>Categoria</label>
-                        <input type="text" id="entCategoria" class="form-control" placeholder="Ex: Insumos, Vendas">
-                    </div>
-                    <div class="form-group">
-                        <label>Operador</label>
-                        <input type="text" id="entOperador" class="form-control" placeholder="Nome do operador">
-                    </div>
-                    <div class="form-group">
-                        <label>Descrição</label>
-                        <input type="text" id="entDescricao" class="form-control" placeholder="Detalhes da movimentação">
-                    </div>
-                    <div class="form-group">
-                        <label>Valor (R$)</label>
-                        <input type="number" step="0.01" id="entValor" class="form-control" placeholder="0.00">
-                    </div>
-                </div>
-
-                <div id="groupSaida">
-                    <div class="form-group">
-                        <label>ID / Nº Pedido</label>
-                        <input type="text" id="saiId" class="form-control" placeholder="Ex: 96">
-                    </div>
-                    <div class="form-group">
-                        <label>Data</label>
-                        <input type="date" id="saiData" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label>Fornecedor</label>
-                        <input type="text" id="saiFornecedor" class="form-control" placeholder="Ex: Distribuidora Lemes Ltda">
-                    </div>
-                    <div class="form-group">
-                        <label>CNPJ</label>
-                        <input type="text" id="saiCnpj" class="form-control" placeholder="00.000.000/0000-00">
-                    </div>
-                    <div class="form-group">
-                        <label>Operador</label>
-                        <input type="text" id="saiOperador" class="form-control" placeholder="Nome do operador">
-                    </div>
-                    <div class="form-group">
-                        <label>Forma de Pagamento</label>
-                        <input type="text" id="saiFormaPagamento" class="form-control" placeholder="Ex: Em Mãos, PIX, Cartão">
-                    </div>
-                    <div class="form-group">
-                        <label>Valor (R$)</label>
-                        <input type="number" step="0.01" id="saiValor" class="form-control" placeholder="0.00">
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" data-close="modalMovimentacao">Cancelar</button>
-                    <button type="submit" id="btnSalvarRegistro" class="btn btn-primary">Salvar Registro</button>
-                </div>
-            </form>
         </div>
     </div>
 
-    <div class="modal-overlay" id="modalDanfe">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>Upload de Documento (PDF ou Imagem)</h3>
-                <button class="close-btn" data-close="modalDanfe">&times;</button>
-            </div>
-            <form id="formDanfe">
-                <p class="modal-info-text">
-                    O arquivo será processado via Webhook n8n para envio ao Google Drive e extração automatizada de dados.
-                </p>
-                <div class="file-upload-area" id="fileUploadContainer">
-                    <svg width="36" height="36" fill="none" stroke="var(--blue)" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
-                        </path>
-                    </svg>
-                    <p class="upload-title">Clique para escolher a Nota Fiscal ou Imagem</p>
-                    <input type="file" id="arquivoDanfe" accept="application/pdf,image/*" hidden>
-                    <div id="nomeArquivo" class="file-name-display"></div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" data-close="modalDanfe">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btnEnviarDanfe">Enviar para o Drive</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Script JS -->
+    <!-- Script Principal -->
     <script src="script.js"></script>
 </body>
-
 </html>
