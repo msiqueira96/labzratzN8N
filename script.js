@@ -54,13 +54,9 @@ const Formatters = {
         }
 
         // 3. Mapeamento de Fonte e Descrição
-        // Pega a 'fonte' (se for Entrada) ou 'fornecedor' (se for Saída)
         const nomePrincipal = isEntrada ? String(item.fonte || 'Fonte não informada') : String(item.fornecedor || 'Fornecedor não informado');
-        
-        // Pega a 'descrição' (se for Entrada) ou 'operador/detalhes' (se for Saída)
         const detalhesExtras = isEntrada ? String(item.descrição || item.descricao || '') : String(item.Operador || item.operador || '');
         
-        // Junta a Fonte e a Descrição. Ex: "Mercado Pago - Venda de fone de ouvido"
         let textoExibicao = nomePrincipal;
         if (detalhesExtras && detalhesExtras.trim() !== '') {
             textoExibicao += ` - ${detalhesExtras}`; 
@@ -71,7 +67,7 @@ const Formatters = {
         return {
             id: String(item.id || index), 
             data: dataFormatada,
-            fornecedor: textoExibicao, // A tabela e os filtros leem daqui
+            fornecedor: textoExibicao,
             cnpj: String(item.cnpj || ''),
             operador: detalhesExtras,
             formaPagamento: String(item['forma de pagamento'] || ''),
@@ -104,10 +100,14 @@ const ApiService = {
 
         const res = await fetch(CONFIG.URL_N8N_UPLOAD, { method: 'POST', body: formData });
         let data = {};
-        try { data = await res.json(); } catch (e) { /* Trata resposta sem corpo */ }
+        try { 
+            data = await res.json(); 
+        } catch (e) {
+            throw new Error("O servidor n8n não retornou um JSON válido.");
+        }
 
-        if (!res.ok || data.status === "erro") {
-            throw new Error(data.mensagem || "Erro no processamento.");
+        if (!res.ok || data.status === "erro" || data.sucesso === false) {
+            throw new Error(data.mensagem || data.error || "Erro no processamento do documento.");
         }
         return data;
     }
@@ -252,7 +252,6 @@ const ChartManager = {
         const labels = Object.keys(fornMap);
         const dataValues = Object.values(fornMap);
         
-        // Paleta de cores expandida para lidar com muitos fornecedores
         const bgColors = ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#06b6d4', '#14b8a6', '#10b981', '#84cc16', '#f59e0b', '#f97316'];
 
         STATE.charts.donut = new Chart(canvas.getContext('2d'), {
@@ -330,7 +329,7 @@ function aplicarFiltros() {
 
     const filtradas = STATE.transacoes.filter(t => {
         const passaTipo = filtroTipoHeader === 'Tudo' || t.tipo === filtroTipoHeader;
-        const passaFornecedor = filtroFornHeader === 'Tudo' || t.fornecedor === filtroFornHeader;
+        const passaFornecedor = filtroFornHeader === 'Tudo' || t.fornecedor === filtroFornecedor;
 
         const dataT = new Date(t.data);
         const dI = dtInicio ? new Date(dtInicio) : null;
@@ -368,6 +367,79 @@ async function carregarDados() {
 }
 
 /**
+ * LÓGICA DO FORMULÁRIO DINÂMICO E PROCESSAMENTO DE IMAGEM
+ */
+function atualizarCamposFormulario() {
+    const tipo = document.getElementById('formTipo')?.value;
+    const groupEntrada = document.getElementById('groupEntrada');
+    const groupSaida = document.getElementById('groupSaida');
+
+    if (!groupEntrada || !groupSaida) return;
+
+    if (tipo === 'Entrada') {
+        groupEntrada.style.display = 'block';
+        groupSaida.style.display = 'none';
+    } else {
+        groupEntrada.style.display = 'none';
+        groupSaida.style.display = 'block';
+    }
+}
+
+function preencherCamposComIA(dados) {
+    const tipoDefinido = dados.tipo || 'Saída';
+    const selectTipo = document.getElementById('formTipo');
+    
+    if (selectTipo) {
+        selectTipo.value = tipoDefinido;
+        atualizarCamposFormulario();
+    }
+
+    if (tipoDefinido === 'Saída') {
+        if (dados.id) document.getElementById('saiId').value = dados.id;
+        if (dados.data) document.getElementById('saiData').value = dados.data;
+        if (dados.fornecedor) document.getElementById('saiFornecedor').value = dados.fornecedor;
+        if (dados.cnpj) document.getElementById('saiCnpj').value = dados.cnpj;
+        if (dados.operador) document.getElementById('saiOperador').value = dados.operador;
+        if (dados.formaPagamento) document.getElementById('saiFormaPagamento').value = dados.formaPagamento;
+        if (dados.valor) document.getElementById('saiValor').value = dados.valor;
+    } else {
+        if (dados.data) document.getElementById('entData').value = dados.data;
+        if (dados.fonte) document.getElementById('entFonte').value = dados.fonte;
+        if (dados.categoria) document.getElementById('entCategoria').value = dados.categoria;
+        if (dados.operador) document.getElementById('entOperador').value = dados.operador;
+        if (dados.descricao) document.getElementById('entDescricao').value = dados.descricao;
+        if (dados.valor) document.getElementById('entValor').value = dados.valor;
+    }
+}
+
+function obterDadosFormulario() {
+    const tipo = document.getElementById('formTipo')?.value;
+
+    if (tipo === 'Entrada') {
+        return {
+            tipo: 'Entrada',
+            data: document.getElementById('entData')?.value || '',
+            fonte: document.getElementById('entFonte')?.value || '',
+            categoria: document.getElementById('entCategoria')?.value || '',
+            operador: document.getElementById('entOperador')?.value || '',
+            descricao: document.getElementById('entDescricao')?.value || '',
+            valor: parseFloat(document.getElementById('entValor')?.value) || 0
+        };
+    } else {
+        return {
+            tipo: 'Saída',
+            id: document.getElementById('saiId')?.value || '',
+            data: document.getElementById('saiData')?.value || '',
+            fornecedor: document.getElementById('saiFornecedor')?.value || '',
+            cnpj: document.getElementById('saiCnpj')?.value || '',
+            operador: document.getElementById('saiOperador')?.value || '',
+            formaPagamento: document.getElementById('saiFormaPagamento')?.value || '',
+            valor: parseFloat(document.getElementById('saiValor')?.value) || 0
+        };
+    }
+}
+
+/**
  * INICIALIZAÇÃO E EVENTOS
  */
 document.addEventListener('DOMContentLoaded', () => {
@@ -383,60 +455,83 @@ document.addEventListener('DOMContentLoaded', () => {
         .forEach(id => document.getElementById(id)?.addEventListener('change', aplicarFiltros));
     document.getElementById('btnReloadTable')?.addEventListener('click', carregarDados);
 
-    // Modais
-    document.getElementById('btnOpenMovimentacao')?.addEventListener('click', () => UI.openModal('modalMovimentacao'));
-    document.getElementById('btnOpenDanfe')?.addEventListener('click', () => UI.openModal('modalDanfe'));
+    // Gestão de Modais
+    document.getElementById('btnOpenMovimentacao')?.addEventListener('click', () => {
+        atualizarCamposFormulario();
+        UI.openModal('modalMovimentacao');
+    });
+
     document.querySelectorAll('[data-close]').forEach(btn => {
         btn.addEventListener('click', () => UI.closeModal(btn.getAttribute('data-close')));
     });
 
-    // === LÓGICA DE UPLOAD DE ARQUIVO (INTEGRADA COM HTML) ===
-    const formDanfe = document.getElementById('formDanfe');
-    const inputArquivo = document.getElementById('arquivoDanfe');
-    const btnEnviarDanfe = document.getElementById('btnEnviarDanfe');
-    const fileContainer = document.getElementById('fileUploadContainer');
-    const nomeArquivoDiv = document.getElementById('nomeArquivo');
+    // Alternância do Tipo de Transação (Entrada / Saída)
+    document.getElementById('formTipo')?.addEventListener('change', atualizarCamposFormulario);
 
-    // 1. Clicar na área tracejada abre a seleção do arquivo
-    if (fileContainer && inputArquivo) {
-        fileContainer.addEventListener('click', () => inputArquivo.click());
-    }
+    // Processamento da imagem via n8n
+    const btnTriggerAi = document.getElementById('btnTriggerAiUpload');
+    const aiInput = document.getElementById('aiFileInput');
+    const aiStatus = document.getElementById('aiUploadStatus');
 
-    // 2. Mostrar o nome do arquivo após seleção
-    if (inputArquivo && nomeArquivoDiv) {
-        inputArquivo.addEventListener('change', () => {
-            nomeArquivoDiv.innerText = inputArquivo.files[0] ? inputArquivo.files[0].name : '';
-        });
-    }
+    btnTriggerAi?.addEventListener('click', () => aiInput?.click());
 
-    // 3. Envio seguro do arquivo interceptando o formulário
-    if (formDanfe) {
-        formDanfe.addEventListener('submit', async (e) => {
-            e.preventDefault(); 
+    aiInput?.addEventListener('change', async () => {
+        const file = aiInput.files[0];
+        if (!file) return;
+
+        try {
+            if (aiStatus) aiStatus.innerText = '🤖 Lendo documento com IA...';
+            if (btnTriggerAi) btnTriggerAi.disabled = true;
+
+            const dadosExtraidos = await ApiService.uploadDanfe(file);
             
-            const file = inputArquivo.files[0];
-            if (!file) {
-                alert('Por favor, selecione um arquivo primeiro.');
-                return;
+            preencherCamposComIA(dadosExtraidos);
+            if (aiStatus) aiStatus.innerText = '✅ Dados preenchidos! Verifique antes de salvar.';
+        } catch (err) {
+            if (aiStatus) aiStatus.innerText = '❌ Erro ao ler imagem: ' + err.message;
+        } finally {
+            if (btnTriggerAi) btnTriggerAi.disabled = false;
+            aiInput.value = '';
+        }
+    });
+
+    // Submissão final para o Google Sheets
+    document.getElementById('formMovimentacao')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const btnSalvar = document.getElementById('btnSalvarRegistro');
+        const payload = obterDadosFormulario();
+        const urlDestino = payload.tipo === 'Entrada' ? CONFIG.URL_ENTRADAS : CONFIG.URL_SAIDAS;
+
+        try {
+            if (btnSalvar) {
+                btnSalvar.disabled = true;
+                btnSalvar.innerText = 'Salvando...';
             }
 
-            try {
-                btnEnviarDanfe.disabled = true;
-                btnEnviarDanfe.innerText = 'A enviar...';
-                
-                await ApiService.uploadDanfe(file);
-                
-                alert('Documento enviado com sucesso!');
-                UI.closeModal('modalDanfe');
-                formDanfe.reset();
-                if (nomeArquivoDiv) nomeArquivoDiv.innerText = '';
-                
-            } catch (error) {
-                alert('Erro ao enviar: ' + error.message);
-            } finally {
-                btnEnviarDanfe.disabled = false;
-                btnEnviarDanfe.innerText = 'Enviar para o Drive'; 
+            const res = await fetch(urlDestino, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error('Falha ao comunicar com o Google Sheets.');
+
+            alert('Movimentação gravada com sucesso!');
+            
+            document.getElementById('formMovimentacao').reset();
+            if (aiStatus) aiStatus.innerText = '';
+            UI.closeModal('modalMovimentacao');
+            
+            carregarDados();
+
+        } catch (err) {
+            alert('Erro ao salvar registro: ' + err.message);
+        } finally {
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = 'Salvar Registro';
             }
-        });
-    }
+        }
+    });
 });
