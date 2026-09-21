@@ -114,11 +114,26 @@ const ApiService = {
 };
 
 /**
- * EXIBIÇÃO NA TABELA
+ * EXIBIÇÃO NA TABELA E MODAIS
  */
 const UI = {
-    openModal(id) { document.getElementById(id)?.classList.add('active'); },
-    closeModal(id) { document.getElementById(id)?.classList.remove('active'); },
+    openModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.add('active');
+            modal.style.display = 'flex'; // Garantia dupla de exibição caso o CSS não use .active
+        } else {
+            console.warn(`[UI] Modal com id "${id}" não foi encontrado no HTML.`);
+        }
+    },
+
+    closeModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }
+    },
 
     renderTable(dados) {
         const tbody = document.getElementById('tabelaCorpo');
@@ -230,10 +245,7 @@ const ChartManager = {
                         { label: 'Saídas', data: arrSaidas, backgroundColor: '#f43f5e', borderRadius: 4 }
                     ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
         }
     },
@@ -251,27 +263,18 @@ const ChartManager = {
 
         const labels = Object.keys(fornMap);
         const dataValues = Object.values(fornMap);
-        
         const bgColors = ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#06b6d4', '#14b8a6', '#10b981', '#84cc16', '#f59e0b', '#f97316'];
 
         STATE.charts.donut = new Chart(canvas.getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: labels,
-                datasets: [{
-                    data: dataValues,
-                    backgroundColor: bgColors,
-                    borderWidth: 1
-                }]
+                datasets: [{ data: dataValues, backgroundColor: bgColors, borderWidth: 1 }]
             },
             options: { 
                 responsive: true, 
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false 
-                    }
-                },
+                plugins: { legend: { display: false } },
                 cutout: '65%'
             }
         });
@@ -279,11 +282,9 @@ const ChartManager = {
         const legendDiv = document.getElementById('legendCategorias');
         if (legendDiv) {
             let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
-            
             labels.forEach((label, i) => {
                 const color = bgColors[i % bgColors.length];
                 const valorFormatado = Formatters.currency(dataValues[i]);
-                
                 html += `
                     <li style="display: flex; align-items: center; margin-bottom: 10px; cursor: default;" title="${label} | Total: ${valorFormatado}">
                         <span style="width: 12px; height: 12px; background-color: ${color}; border-radius: 3px; margin-right: 8px; flex-shrink: 0;"></span>
@@ -293,7 +294,6 @@ const ChartManager = {
                     </li>
                 `;
             });
-            
             html += '</ul>';
             legendDiv.innerHTML = html;
         }
@@ -367,22 +367,15 @@ async function carregarDados() {
 }
 
 /**
- * LÓGICA DO FORMULÁRIO DINÂMICO E PROCESSAMENTO DE IMAGEM
+ * LÓGICA DO FORMULÁRIO DINÂMICO E PREENCHIMENTO POR IA
  */
 function atualizarCamposFormulario() {
-    const tipo = document.getElementById('formTipo')?.value;
+    const tipo = document.getElementById('formTipo')?.value || 'Saída';
     const groupEntrada = document.getElementById('groupEntrada');
     const groupSaida = document.getElementById('groupSaida');
 
-    if (!groupEntrada || !groupSaida) return;
-
-    if (tipo === 'Entrada') {
-        groupEntrada.style.display = 'block';
-        groupSaida.style.display = 'none';
-    } else {
-        groupEntrada.style.display = 'none';
-        groupSaida.style.display = 'block';
-    }
+    if (groupEntrada) groupEntrada.style.display = (tipo === 'Entrada') ? 'block' : 'none';
+    if (groupSaida) groupSaida.style.display = (tipo === 'Entrada') ? 'none' : 'block';
 }
 
 function preencherCamposComIA(dados) {
@@ -455,12 +448,23 @@ document.addEventListener('DOMContentLoaded', () => {
         .forEach(id => document.getElementById(id)?.addEventListener('change', aplicarFiltros));
     document.getElementById('btnReloadTable')?.addEventListener('click', carregarDados);
 
-    // Gestão de Modais
-    document.getElementById('btnOpenMovimentacao')?.addEventListener('click', () => {
-        atualizarCamposFormulario();
-        UI.openModal('modalMovimentacao');
-    });
+    // Evento para abrir o modal de Movimentação (Busca por múltiplos IDs possíveis)
+    const btnOpen = document.getElementById('btnOpenMovimentacao') || document.getElementById('btnNovaMovimentacao');
+    if (btnOpen) {
+        btnOpen.addEventListener('click', () => {
+            UI.openModal('modalMovimentacao');
+            try {
+                atualizarCamposFormulario();
+            } catch (err) {
+                console.error("Erro ao alternar campos do formulário:", err);
+            }
+        });
+    }
 
+    // Modal Danfe / Upload
+    document.getElementById('btnOpenDanfe')?.addEventListener('click', () => UI.openModal('modalDanfe'));
+
+    // Botões de fechar modais
     document.querySelectorAll('[data-close]').forEach(btn => {
         btn.addEventListener('click', () => UI.closeModal(btn.getAttribute('data-close')));
     });
@@ -468,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Alternância do Tipo de Transação (Entrada / Saída)
     document.getElementById('formTipo')?.addEventListener('change', atualizarCamposFormulario);
 
-    // Processamento da imagem via n8n
+    // Upload e Leitura de Imagem via IA
     const btnTriggerAi = document.getElementById('btnTriggerAiUpload');
     const aiInput = document.getElementById('aiFileInput');
     const aiStatus = document.getElementById('aiUploadStatus');
@@ -495,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Submissão final para o Google Sheets
+    // Submissão do formulário para o Google Sheets
     document.getElementById('formMovimentacao')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         
