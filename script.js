@@ -11,7 +11,7 @@ const CONFIG = {
 
 const STATE = {
     transacoes: [],
-    charts: { yAxis: null, bars: null, donut: null, pie: null }
+    charts: { bars: null, donut: null, pie: null }
 };
 
 /**
@@ -52,7 +52,7 @@ const Formatters = {
         }
 
         const nomePrincipal = isEntrada ? String(item.fonte || 'Fonte não informada') : String(item.fornecedor || 'Fornecedor não informado');
-        const detalhesExtras = isEntrada ? String(item.descrição || item.descricao || '') : String(item.Operador || item.operador || '');
+        const detalhesExtras = isEntrada ? String(item['descrição'] || item.descricao || '') : String(item.Operador || item.operador || '');
         
         let textoExibicao = nomePrincipal;
         if (detalhesExtras && detalhesExtras.trim() !== '') {
@@ -69,7 +69,7 @@ const Formatters = {
             operador: detalhesExtras,
             formaPagamento: String(item['forma de pagamento'] || ''),
             categoria: categoriaFinal,
-            tipo: String(item.abaOrigem || ''),
+            tipo: isEntrada ? 'Entrada' : 'Saída',
             valor: Math.abs(valorNum)
         };
     }
@@ -115,24 +115,10 @@ const ApiService = {
  */
 const UI = {
     openModal(id) {
-        // Busca o elemento por ID exato ou variação comum
         let modal = document.getElementById(id);
-        if (!modal) {
-            modal = document.getElementById('modal-movimentacao') || 
-                    document.getElementById('modalNovaMovimentacao') || 
-                    document.querySelector('.modal-overlay');
-        }
-
         if (modal) {
             modal.classList.add('active');
-            modal.style.setProperty('display', 'flex', 'important');
-            
-            // Tenta atualizar a visibilidade dos campos do formulário
-            try {
-                atualizarCamposFormulario();
-            } catch (e) {
-                console.warn("Não foi possível atualizar os campos do formulário:", e);
-            }
+            atualizarCamposFormulario();
         } else {
             console.error(`[Erro UI] Nenhum modal foi encontrado com o ID "${id}".`);
         }
@@ -140,13 +126,8 @@ const UI = {
 
     closeModal(id) {
         let modal = document.getElementById(id);
-        if (!modal) {
-            modal = document.querySelector('.modal-overlay.active') || document.querySelector('.modal-overlay');
-        }
-
         if (modal) {
             modal.classList.remove('active');
-            modal.style.setProperty('display', 'none', 'important');
         }
     },
 
@@ -175,7 +156,7 @@ const UI = {
                         ${t.operador ? ` • <span>Op: ${t.operador}</span>` : ''}
                     </div>
                 </td>
-                <td><span class="badge-cat">Geral</span></td>
+                <td><span class="badge-cat">${t.categoria}</span></td>
                 <td class="${valClass}">${t.tipo}</td>
                 <td class="text-right ${valClass}">
                     ${isEntrada ? '+' : '-'} ${Formatters.currency(t.valor)}
@@ -193,6 +174,9 @@ const UI = {
         const totalSaidas = saidas.reduce((a, b) => a + b.valor, 0);
         const saldo = totalEntradas - totalSaidas;
 
+        const maiorEntrada = entradas.length ? Math.max(...entradas.map(t => t.valor)) : 0;
+        const maiorSaida = saidas.length ? Math.max(...saidas.map(t => t.valor)) : 0;
+
         const setTxt = (id, txt) => {
             const el = document.getElementById(id);
             if (el) el.innerText = txt;
@@ -201,23 +185,33 @@ const UI = {
         setTxt('kpiSaldo', Formatters.currency(saldo));
         setTxt('kpiEntradas', Formatters.currency(totalEntradas));
         setTxt('kpiSaidas', Formatters.currency(totalSaidas));
-        setTxt('kpiStatusSaldo', saldo >= 0 ? "Positivo" : "Atenção (Negativo)");
+        setTxt('kpiMaiorEntrada', Formatters.currency(maiorEntrada));
+        setTxt('kpiMaiorSaida', Formatters.currency(maiorSaida));
+        setTxt('kpiStatusSaldo', saldo >= 0 ? "Consolidado (Positivo)" : "Atenção (Negativo)");
     },
 
     populateSelectFilters() {
         const fornecedores = [...new Set(STATE.transacoes.map(t => t.fornecedor).filter(Boolean))].sort();
+        const categorias = [...new Set(STATE.transacoes.map(t => t.categoria).filter(Boolean))].sort();
+
         const selectForn = document.getElementById('headerFiltroFornecedor');
-        if (!selectForn) return;
+        if (selectForn) {
+            const valAtual = selectForn.value;
+            selectForn.innerHTML = '<option value="Tudo">▼ Todos</option>' +
+                fornecedores.map(f => `<option value="${f}">${f}</option>`).join('');
+            if (fornecedores.includes(valAtual)) selectForn.value = valAtual;
+        }
 
-        const valAtual = selectForn.value;
-        selectForn.innerHTML = '<option value="Tudo">▼ Todos</option>' +
-            fornecedores.map(f => `<option value="${f}">${f}</option>`).join('');
-
-        if (fornecedores.includes(valAtual)) selectForn.value = valAtual;
+        const selectCat = document.getElementById('headerFiltroCategoria');
+        if (selectCat) {
+            const valCatAtual = selectCat.value;
+            selectCat.innerHTML = '<option value="Tudo">▼ Todas</option>' +
+                categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+            if (categorias.includes(valCatAtual)) selectCat.value = valCatAtual;
+        }
     }
 };
 
-// EXPOSIÇÃO GLOBAL DE FUNÇÕES (Garante funcionamento de onclick no HTML)
 window.UI = UI;
 window.openModal = (id) => UI.openModal(id);
 window.closeModal = (id) => UI.closeModal(id);
@@ -235,12 +229,12 @@ const ChartManager = {
 
     renderAll(dados) {
         if (typeof Chart === 'undefined') return;
-        this.renderBarsAndYAxis(dados);
+        this.renderBars(dados);
         this.renderCategoryDonut(dados);
         this.renderProportionPie(dados);
     },
 
-    renderBarsAndYAxis(dados) {
+    renderBars(dados) {
         const datasMap = {};
         dados.forEach(d => {
             if (!datasMap[d.data]) datasMap[d.data] = { e: 0, s: 0 };
@@ -272,17 +266,18 @@ const ChartManager = {
 
     renderCategoryDonut(dados) {
         const despesas = dados.filter(t => !t.tipo.toLowerCase().includes('entrada'));
-        const fornMap = {};
+        const catMap = {};
         despesas.forEach(d => {
-            if (d.fornecedor) fornMap[d.fornecedor] = (fornMap[d.fornecedor] || 0) + d.valor;
+            const cat = d.categoria || 'Geral';
+            catMap[cat] = (catMap[cat] || 0) + d.valor;
         });
 
         this.destroyChart('donut');
         const canvas = document.getElementById('chartCategoriasDonut');
         if (!canvas) return;
 
-        const labels = Object.keys(fornMap);
-        const dataValues = Object.values(fornMap);
+        const labels = Object.keys(catMap);
+        const dataValues = Object.values(catMap);
         const bgColors = ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#06b6d4', '#14b8a6', '#10b981', '#84cc16', '#f59e0b', '#f97316'];
 
         STATE.charts.donut = new Chart(canvas.getContext('2d'), {
@@ -306,9 +301,9 @@ const ChartManager = {
                 const color = bgColors[i % bgColors.length];
                 const valorFormatado = Formatters.currency(dataValues[i]);
                 html += `
-                    <li style="display: flex; align-items: center; margin-bottom: 10px; cursor: default;" title="${label} | Total: ${valorFormatado}">
-                        <span style="width: 12px; height: 12px; background-color: ${color}; border-radius: 3px; margin-right: 8px; flex-shrink: 0;"></span>
-                        <span style="color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;">
+                    <li style="display: flex; align-items: center; margin-bottom: 8px;" title="${label}: ${valorFormatado}">
+                        <span style="width: 10px; height: 10px; background-color: ${color}; border-radius: 2px; margin-right: 8px; flex-shrink: 0;"></span>
+                        <span style="color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">
                             ${label}
                         </span>
                     </li>
@@ -344,12 +339,17 @@ const ChartManager = {
 function aplicarFiltros() {
     const dtInicio = document.getElementById('filtroInicio')?.value;
     const dtFim = document.getElementById('filtroFim')?.value;
+    const filtroGeralTipo = document.getElementById('filtroTipo')?.value || 'Tudo';
+
     const filtroFornHeader = document.getElementById('headerFiltroFornecedor')?.value || 'Tudo';
+    const filtroCatHeader = document.getElementById('headerFiltroCategoria')?.value || 'Tudo';
     const filtroTipoHeader = document.getElementById('headerFiltroTipo')?.value || 'Tudo';
 
     const filtradas = STATE.transacoes.filter(t => {
-        const passaTipo = filtroTipoHeader === 'Tudo' || t.tipo === filtroTipoHeader;
-        const passaFornecedor = filtroFornHeader === 'Tudo' || t.fornecedor === filtroFornecedor;
+        const passaGeralTipo = filtroGeralTipo === 'Tudo' || t.tipo === filtroGeralTipo;
+        const passaTipoHeader = filtroTipoHeader === 'Tudo' || t.tipo === filtroTipoHeader;
+        const passaFornecedor = filtroFornHeader === 'Tudo' || t.fornecedor === filtroFornHeader;
+        const passaCategoria = filtroCatHeader === 'Tudo' || t.categoria === filtroCatHeader;
 
         const dataT = new Date(t.data);
         const dI = dtInicio ? new Date(dtInicio) : null;
@@ -360,12 +360,24 @@ function aplicarFiltros() {
         else if (dI) passaData = dataT >= dI;
         else if (dF) passaData = dataT <= dF;
 
-        return passaTipo && passaFornecedor && passaData;
+        return passaGeralTipo && passaTipoHeader && passaFornecedor && passaCategoria && passaData;
     });
 
     UI.updateKPIs(filtradas);
     ChartManager.renderAll(filtradas);
     UI.renderTable(filtradas);
+}
+
+function resetarFiltros() {
+    ['filtroInicio', 'filtroFim'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    ['filtroTipo', 'headerFiltroFornecedor', 'headerFiltroCategoria', 'headerFiltroTipo'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = 'Tudo';
+    });
+    aplicarFiltros();
 }
 
 async function carregarDados() {
@@ -387,7 +399,7 @@ async function carregarDados() {
 }
 
 /**
- * LÓGICA DO FORMULÁRIO DINÂMICO E IA
+ * FORMULÁRIO E IA
  */
 function atualizarCamposFormulario() {
     const tipo = document.getElementById('formTipo')?.value || 'Saída';
@@ -453,7 +465,7 @@ function obterDadosFormulario() {
 }
 
 /**
- * INICIALIZAÇÃO E DELEGAÇÃO DE EVENTOS
+ * INICIALIZAÇÃO
  */
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof Chart !== 'undefined') {
@@ -463,37 +475,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     carregarDados();
 
-    // Filtros e Atualizações
-    ['filtroInicio', 'filtroFim', 'headerFiltroFornecedor', 'headerFiltroTipo']
+    // Listeners dos Filtros
+    ['filtroInicio', 'filtroFim', 'filtroTipo', 'headerFiltroFornecedor', 'headerFiltroCategoria', 'headerFiltroTipo']
         .forEach(id => document.getElementById(id)?.addEventListener('change', aplicarFiltros));
+
+    document.getElementById('btnResetarFiltros')?.addEventListener('click', resetarFiltros);
     document.getElementById('btnReloadTable')?.addEventListener('click', carregarDados);
 
-    // DELEGAÇÃO DE EVENTOS GLOBAL PARA BOTÕES DE MODAL
+    // Delegação para botões de modal
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('button, a, .btn');
         if (!btn) return;
 
-        // Se o botão contém texto ou atributos sobre "Movimentação"
         const texto = btn.innerText?.toLowerCase() || '';
         const id = btn.id || '';
 
-        if (id === 'btnOpenMovimentacao' || id === 'btnNovaMovimentacao' || texto.includes('movimentação') || texto.includes('movimentacao')) {
+        if (id === 'btnOpenMovimentacao' || texto.includes('movimentação')) {
             UI.openModal('modalMovimentacao');
-        } else if (id === 'btnOpenDanfe' || texto.includes('danfe') || texto.includes('upload')) {
+        } else if (id === 'btnOpenDanfe' || texto.includes('upload danfe')) {
             UI.openModal('modalDanfe');
         }
 
-        // Suporte a fechamento
         const closeAttr = btn.getAttribute('data-close');
         if (closeAttr) {
             UI.closeModal(closeAttr);
         }
     });
 
-    // Alternância do Tipo de Transação (Entrada / Saída)
     document.getElementById('formTipo')?.addEventListener('change', atualizarCamposFormulario);
 
-    // Upload e Leitura de Imagem via IA
+    // Upload via IA
     const btnTriggerAi = document.getElementById('btnTriggerAiUpload');
     const aiInput = document.getElementById('aiFileInput');
     const aiStatus = document.getElementById('aiUploadStatus');
@@ -509,7 +520,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btnTriggerAi) btnTriggerAi.disabled = true;
 
             const dadosExtraidos = await ApiService.uploadDanfe(file);
-            
             preencherCamposComIA(dadosExtraidos);
             if (aiStatus) aiStatus.innerText = '✅ Dados preenchidos! Verifique antes de salvar.';
         } catch (err) {
@@ -520,7 +530,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Submissão do formulário para o Google Sheets
+    // Upload DANFE
+    const fileDanfeInput = document.getElementById('arquivoDanfe');
+    const fileContainer = document.getElementById('fileUploadContainer');
+    const nameDisplay = document.getElementById('nomeArquivo');
+
+    fileContainer?.addEventListener('click', () => fileDanfeInput?.click());
+    fileDanfeInput?.addEventListener('change', (e) => {
+        const name = e.target.files[0]?.name;
+        if (nameDisplay) nameDisplay.innerText = name ? `Arquivo selecionado: ${name}` : '';
+    });
+
+    document.getElementById('formDanfe')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const file = fileDanfeInput?.files[0];
+        if (!file) {
+            alert('Por favor, selecione um arquivo primeiro.');
+            return;
+        }
+
+        const btnEnv = document.getElementById('btnEnviarDanfe');
+        try {
+            if (btnEnv) {
+                btnEnv.disabled = true;
+                btnEnv.innerText = 'Enviando...';
+            }
+            await ApiService.uploadDanfe(file);
+            alert('Documento enviado com sucesso para o n8n!');
+            UI.closeModal('modalDanfe');
+            fileDanfeInput.value = '';
+            if (nameDisplay) nameDisplay.innerText = '';
+        } catch (err) {
+            alert('Erro no upload: ' + err.message);
+        } finally {
+            if (btnEnv) {
+                btnEnv.disabled = false;
+                btnEnv.innerText = 'Enviar para o Drive';
+            }
+        }
+    });
+
+    // Submissão de Movimentação
     document.getElementById('formMovimentacao')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -543,11 +593,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error('Falha ao comunicar com o Google Sheets.');
 
             alert('Movimentação gravada com sucesso!');
-            
             document.getElementById('formMovimentacao').reset();
             if (aiStatus) aiStatus.innerText = '';
             UI.closeModal('modalMovimentacao');
-            
             carregarDados();
 
         } catch (err) {
