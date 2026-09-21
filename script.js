@@ -420,14 +420,24 @@ function limparCamposFormulario() {
 }
 
 function preencherCamposComIA(respostaIa) {
-    const item = respostaIa.data || respostaIa;
+    // 1. Desembrulha caso o n8n responda em formato de Array/Lista
+    let item = Array.isArray(respostaIa) ? respostaIa[0] : respostaIa;
 
+    // Desembrulha se vier dentro de objetos como .data, .output ou .json
+    if (item && item.json) item = item.json;
+    if (item && item.data) item = item.data;
+    if (item && item.output) item = item.output;
+
+    if (!item) return;
+
+    // 2. Tipo de Transação
     const selectTipoTransacao = document.getElementById('formTipo');
     if (selectTipoTransacao) {
-        selectTipoTransacao.value = item.tipoTransacao || 'Saída';
+        selectTipoTransacao.value = item.tipoTransacao || item.tipo_transacao || 'Saída';
         atualizarCamposFormulario();
     }
 
+    // 3. Tipo de Documento
     const rawTipoDoc = item.tipoDocumento || item.tipo_documento || item.tipo;
     if (rawTipoDoc) {
         const selectTipoDoc = document.getElementById('tipoDocumento');
@@ -438,13 +448,70 @@ function preencherCamposComIA(respostaIa) {
         }
     }
 
-    if (item.id) document.getElementById('saiId').value = item.id;
-    if (item.data) document.getElementById('saiData').value = item.data;
-    if (item.fornecedor) document.getElementById('saiFornecedor').value = item.fornecedor;
-    if (item.cnpj) document.getElementById('saiCnpj').value = item.cnpj;
-    if (item.operador) document.getElementById('saiOperador').value = item.operador;
-    if (item.formaPagamento) document.getElementById('saiFormaPagamento').value = item.formaPagamento;
-    if (item.valor !== undefined && item.valor !== null) document.getElementById('saiValor').value = item.valor;
+    // 4. ID / Nº do Pedido
+    const valId = item.id ?? item.id_documento ?? item.idDocumento ?? item.pedido;
+    if (valId !== undefined && valId !== null) {
+        const el = document.getElementById('saiId');
+        if (el) el.value = valId;
+    }
+
+    // 5. Data de Emissão (Formatada para AAAA-MM-DD aceito pelo HTML)
+    const valData = item.data || item.data_emissao || item.dataEmissao || item.data_vencimento;
+    if (valData) {
+        const el = document.getElementById('saiData');
+        if (el) {
+            let dataFormatada = String(valData).trim();
+            if (dataFormatada.includes('/')) {
+                const p = dataFormatada.split('/');
+                if (p.length === 3) {
+                    dataFormatada = `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+                }
+            }
+            el.value = dataFormatada;
+        }
+    }
+
+    // 6. Fornecedor
+    const valFornecedor = item.fornecedor || item.nome_fornecedor || item.nomeFornecedor;
+    if (valFornecedor) {
+        const el = document.getElementById('saiFornecedor');
+        if (el) el.value = valFornecedor;
+    }
+
+    // 7. CNPJ
+    const valCnpj = item.cnpj || item.cnpj_fornecedor || item.cnpjFornecedor;
+    if (valCnpj) {
+        const el = document.getElementById('saiCnpj');
+        if (el) el.value = valCnpj;
+    }
+
+    // 8. Operador / Comprador
+    const valOperador = item.operador || item.nome_comprador || item.comprador || item.representante;
+    if (valOperador) {
+        const el = document.getElementById('saiOperador');
+        if (el) el.value = valOperador;
+    }
+
+    // 9. Forma de Pagamento
+    const valFormaPgto = item.formaPagamento || item.forma_pagamento || item.formaPagto;
+    if (valFormaPgto) {
+        const el = document.getElementById('saiFormaPagamento');
+        if (el) el.value = valFormaPgto;
+    }
+
+    // 10. Valor Total / Pago
+    const rawValor = item.valor ?? item.valor_pago ?? item.valorPago ?? item.valor_total ?? item.valorTotal;
+    if (rawValor !== undefined && rawValor !== null) {
+        const el = document.getElementById('saiValor');
+        if (el) {
+            if (typeof rawValor === 'string') {
+                const cleaned = rawValor.replace(/R\$\s?/, '').replace(/\./g, '').replace(',', '.').trim();
+                el.value = parseFloat(cleaned) || rawValor;
+            } else {
+                el.value = rawValor;
+            }
+        }
+    }
 }
 
 function obterDadosFormulario() {
