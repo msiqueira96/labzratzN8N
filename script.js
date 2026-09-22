@@ -427,12 +427,17 @@ function preencherCamposComIA(respostaIa) {
 
     if (item && item.body) item = item.body;
     if (item && item.json) item = item.json;
-    if (item && item.data) item = item.data;
+    
+    // Corrigido: Apenas desembrulha item.data se for um objeto real (e não uma string de data como "2026-08-03")
+    if (item && item.data && typeof item.data === 'object' && !Array.isArray(item.data)) {
+        item = item.data;
+    }
+    
     if (item && item.output) item = item.output;
 
     console.log("🔍 Objeto processado para preenchimento:", item);
 
-    if (!item) {
+    if (!item || typeof item !== 'object') {
         console.warn("⚠️ Nenhum objeto válido encontrado para preencher os campos.");
         return;
     }
