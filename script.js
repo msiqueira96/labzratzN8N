@@ -419,10 +419,10 @@ function limparCamposFormulario() {
 }
 
 function preencherCamposComIA(respostaIa) {
-    // Exibe no console do navegador (F12) o objeto exato retornado pelo n8n
+    // Exibe na consola do navegador (F12) o objeto exato retornado pelo n8n
     console.log("📥 Dados recebidos do n8n no Frontend:", respostaIa);
 
-    // 1. Desembrulha caso o n8n responda em formato de Array ou objetos aninhados (body, json, data)
+    // 1. Desembrulha caso o n8n responda em formato de Array ou objetos aninhados
     let item = Array.isArray(respostaIa) ? respostaIa[0] : respostaIa;
 
     if (item && item.body) item = item.body;
@@ -471,15 +471,17 @@ function preencherCamposComIA(respostaIa) {
     const valId = item.id ?? item.id_documento ?? item.idDocumento ?? item.pedido;
     setInputValue('saiId', valId ?? '');
 
-    // 5. Data de Emissão (Formatada para AAAA-MM-DD exigida pelo input type="date")
+    // 5. Data de Emissão (Suporta AAAA-MM-DD e converte DD/MM/AAAA se necessário)
     const valData = item.data || item.data_emissao || item.dataEmissao || item.data_vencimento;
     if (valData) {
         let dataFormatada = String(valData).trim();
         if (dataFormatada.includes('/')) {
-            const p = dataFormatada.split('/');
+            const p = dataFormatada.split(' ')[0].split('/');
             if (p.length === 3) {
                 dataFormatada = `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
             }
+        } else if (dataFormatada.includes('-')) {
+            dataFormatada = dataFormatada.substring(0, 10); // Garante AAAA-MM-DD isolado de hora
         }
         setInputValue('saiData', dataFormatada);
     }
