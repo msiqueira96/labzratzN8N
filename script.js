@@ -419,24 +419,44 @@ function limparCamposFormulario() {
 }
 
 function preencherCamposComIA(respostaIa) {
-    // Caso o n8n responda em array/lista, pega o primeiro item
+    // Exibe no console do navegador (F12) o objeto exato retornado pelo n8n
+    console.log("📥 Dados recebidos do n8n no Frontend:", respostaIa);
+
+    // 1. Desembrulha caso o n8n responda em formato de Array ou objetos aninhados (body, json, data)
     let item = Array.isArray(respostaIa) ? respostaIa[0] : respostaIa;
 
-    // Desembrulha caso venha dentro de chaves como .json, .data ou .output
+    if (item && item.body) item = item.body;
     if (item && item.json) item = item.json;
     if (item && item.data) item = item.data;
     if (item && item.output) item = item.output;
 
-    if (!item) return;
+    console.log("🔍 Objeto processado para preenchimento:", item);
 
-    // 1. Tipo de Transação
+    if (!item) {
+        console.warn("⚠️ Nenhum objeto válido encontrado para preencher os campos.");
+        return;
+    }
+
+    // Função auxiliar para atribuir valor e disparar eventos no DOM
+    const setInputValue = (id, valor) => {
+        const el = document.getElementById(id);
+        if (el && valor !== undefined && valor !== null) {
+            el.value = valor;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        } else if (!el) {
+            console.warn(`⚠️ Elemento HTML com ID "${id}" não foi encontrado no DOM.`);
+        }
+    };
+
+    // 2. Tipo de Transação (Garante a troca para 'Saída' para exibir os campos corretos)
     const selectTipoTransacao = document.getElementById('formTipo');
     if (selectTipoTransacao) {
         selectTipoTransacao.value = item.tipoTransacao || item.tipo_transacao || 'Saída';
         atualizarCamposFormulario();
     }
 
-    // 2. Tipo de Documento
+    // 3. Tipo de Documento
     const rawTipoDoc = item.tipoDocumento || item.tipo_documento || item.tipo;
     if (rawTipoDoc) {
         const selectTipoDoc = document.getElementById('tipoDocumento');
@@ -447,69 +467,48 @@ function preencherCamposComIA(respostaIa) {
         }
     }
 
-    // 3. ID / Nº do Pedido
+    // 4. ID / Nº do Pedido
     const valId = item.id ?? item.id_documento ?? item.idDocumento ?? item.pedido;
-    if (valId !== undefined && valId !== null) {
-        const el = document.getElementById('saiId');
-        if (el) el.value = valId;
-    }
+    setInputValue('saiId', valId ?? '');
 
-    // 4. Data de Emissão (Formatada para AAAA-MM-DD aceita pelo input HTML)
+    // 5. Data de Emissão (Formatada para AAAA-MM-DD exigida pelo input type="date")
     const valData = item.data || item.data_emissao || item.dataEmissao || item.data_vencimento;
     if (valData) {
-        const el = document.getElementById('saiData');
-        if (el) {
-            let dataFormatada = String(valData).trim();
-            if (dataFormatada.includes('/')) {
-                const p = dataFormatada.split('/');
-                if (p.length === 3) {
-                    dataFormatada = `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
-                }
+        let dataFormatada = String(valData).trim();
+        if (dataFormatada.includes('/')) {
+            const p = dataFormatada.split('/');
+            if (p.length === 3) {
+                dataFormatada = `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
             }
-            el.value = dataFormatada;
         }
+        setInputValue('saiData', dataFormatada);
     }
 
-    // 5. Fornecedor
+    // 6. Fornecedor
     const valFornecedor = item.fornecedor || item.nome_fornecedor || item.nomeFornecedor;
-    if (valFornecedor) {
-        const el = document.getElementById('saiFornecedor');
-        if (el) el.value = valFornecedor;
-    }
+    setInputValue('saiFornecedor', valFornecedor ?? '');
 
-    // 6. CNPJ
+    // 7. CNPJ
     const valCnpj = item.cnpj || item.cnpj_fornecedor || item.cnpjFornecedor;
-    if (valCnpj) {
-        const el = document.getElementById('saiCnpj');
-        if (el) el.value = valCnpj;
-    }
+    setInputValue('saiCnpj', valCnpj ?? '');
 
-    // 7. Operador / Comprador
+    // 8. Operador / Comprador
     const valOperador = item.operador || item.nome_comprador || item.comprador || item.representante;
-    if (valOperador) {
-        const el = document.getElementById('saiOperador');
-        if (el) el.value = valOperador;
-    }
+    setInputValue('saiOperador', valOperador ?? '');
 
-    // 8. Forma de Pagamento
+    // 9. Forma de Pagamento
     const valFormaPgto = item.formaPagamento || item.forma_pagamento || item.formaPagto;
-    if (valFormaPgto) {
-        const el = document.getElementById('saiFormaPagamento');
-        if (el) el.value = valFormaPgto;
-    }
+    setInputValue('saiFormaPagamento', valFormaPgto ?? '');
 
-    // 9. Valor Total / Pago
+    // 10. Valor Total
     const rawValor = item.valor ?? item.valor_pago ?? item.valorPago ?? item.valor_total ?? item.valorTotal;
     if (rawValor !== undefined && rawValor !== null) {
-        const el = document.getElementById('saiValor');
-        if (el) {
-            if (typeof rawValor === 'string') {
-                const cleaned = rawValor.replace(/R\$\s?/, '').replace(/\./g, '').replace(',', '.').trim();
-                el.value = parseFloat(cleaned) || rawValor;
-            } else {
-                el.value = rawValor;
-            }
+        let valTratado = rawValor;
+        if (typeof rawValor === 'string') {
+            const cleaned = rawValor.replace(/R\$\s?/, '').replace(/\./g, '').replace(',', '.').trim();
+            valTratado = parseFloat(cleaned) || rawValor;
         }
+        setInputValue('saiValor', valTratado);
     }
 }
 
