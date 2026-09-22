@@ -93,7 +93,6 @@ const ApiService = {
 
     async uploadDanfe(file) {
         const formData = new FormData();
-        // Apenas um anexo para evitar o duplo envio ao n8n
         formData.append('file', file);
 
         const res = await fetch(CONFIG.URL_N8N_UPLOAD, { method: 'POST', body: formData });
@@ -420,24 +419,24 @@ function limparCamposFormulario() {
 }
 
 function preencherCamposComIA(respostaIa) {
-    // 1. Desembrulha caso o n8n responda em formato de Array/Lista
+    // Caso o n8n responda em array/lista, pega o primeiro item
     let item = Array.isArray(respostaIa) ? respostaIa[0] : respostaIa;
 
-    // Desembrulha se vier dentro de objetos como .data, .output ou .json
+    // Desembrulha caso venha dentro de chaves como .json, .data ou .output
     if (item && item.json) item = item.json;
     if (item && item.data) item = item.data;
     if (item && item.output) item = item.output;
 
     if (!item) return;
 
-    // 2. Tipo de Transação
+    // 1. Tipo de Transação
     const selectTipoTransacao = document.getElementById('formTipo');
     if (selectTipoTransacao) {
         selectTipoTransacao.value = item.tipoTransacao || item.tipo_transacao || 'Saída';
         atualizarCamposFormulario();
     }
 
-    // 3. Tipo de Documento
+    // 2. Tipo de Documento
     const rawTipoDoc = item.tipoDocumento || item.tipo_documento || item.tipo;
     if (rawTipoDoc) {
         const selectTipoDoc = document.getElementById('tipoDocumento');
@@ -448,14 +447,14 @@ function preencherCamposComIA(respostaIa) {
         }
     }
 
-    // 4. ID / Nº do Pedido
+    // 3. ID / Nº do Pedido
     const valId = item.id ?? item.id_documento ?? item.idDocumento ?? item.pedido;
     if (valId !== undefined && valId !== null) {
         const el = document.getElementById('saiId');
         if (el) el.value = valId;
     }
 
-    // 5. Data de Emissão (Formatada para AAAA-MM-DD aceito pelo HTML)
+    // 4. Data de Emissão (Formatada para AAAA-MM-DD aceita pelo input HTML)
     const valData = item.data || item.data_emissao || item.dataEmissao || item.data_vencimento;
     if (valData) {
         const el = document.getElementById('saiData');
@@ -471,35 +470,35 @@ function preencherCamposComIA(respostaIa) {
         }
     }
 
-    // 6. Fornecedor
+    // 5. Fornecedor
     const valFornecedor = item.fornecedor || item.nome_fornecedor || item.nomeFornecedor;
     if (valFornecedor) {
         const el = document.getElementById('saiFornecedor');
         if (el) el.value = valFornecedor;
     }
 
-    // 7. CNPJ
+    // 6. CNPJ
     const valCnpj = item.cnpj || item.cnpj_fornecedor || item.cnpjFornecedor;
     if (valCnpj) {
         const el = document.getElementById('saiCnpj');
         if (el) el.value = valCnpj;
     }
 
-    // 8. Operador / Comprador
+    // 7. Operador / Comprador
     const valOperador = item.operador || item.nome_comprador || item.comprador || item.representante;
     if (valOperador) {
         const el = document.getElementById('saiOperador');
         if (el) el.value = valOperador;
     }
 
-    // 9. Forma de Pagamento
+    // 8. Forma de Pagamento
     const valFormaPgto = item.formaPagamento || item.forma_pagamento || item.formaPagto;
     if (valFormaPgto) {
         const el = document.getElementById('saiFormaPagamento');
         if (el) el.value = valFormaPgto;
     }
 
-    // 10. Valor Total / Pago
+    // 9. Valor Total / Pago
     const rawValor = item.valor ?? item.valor_pago ?? item.valorPago ?? item.valor_total ?? item.valorTotal;
     if (rawValor !== undefined && rawValor !== null) {
         const el = document.getElementById('saiValor');
@@ -597,7 +596,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (aiStatus) aiStatus.innerText = '🤖 Lendo documento com IA...';
             if (btnTriggerAi) btnTriggerAi.disabled = true;
 
-            // Limpa os campos antigos antes de receber o novo documento
             limparCamposFormulario();
 
             const dadosExtraidos = await ApiService.uploadDanfe(file);
