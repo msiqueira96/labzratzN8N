@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     }
 
     // 🔴 1. TENS A CERTEZA QUE COLOCASTE A URL REAL AQUI? (Ex: https://n8n.labzratz.tech/webhook/...)
-    const N8N_WEBHOOK_URL = 'COLE_AQUI_A_URL_DO_SEU_WEBHOOK_DE_UPLOAD'; 
+    const N8N_WEBHOOK_URL = 'https://n8n.labzratz.tech/webhook-test/upload-document'; 
 
     try {
         const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
