@@ -710,19 +710,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnSalvar.innerText = 'Salvar Registro';
             }
         }
-            alert('Movimentação gravada com sucesso!');
-            document.getElementById('formMovimentacao').reset();
-            if (aiStatus) aiStatus.innerText = '';
-            UI.closeModal('modalMovimentacao');
-            carregarDados();
-
-        } catch (err) {
-            alert('Erro ao salvar registro: ' + err.message);
-        } finally {
-            if (btnSalvar) {
-                btnSalvar.disabled = false;
-                btnSalvar.innerText = 'Salvar Registro';
-            }
-        }
     });
 });
