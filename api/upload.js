@@ -4,7 +4,54 @@
  * CONFIGURAÇÃO E ESTADO GLOBAL
  */
 const CONFIG = {
-    URL_ENTRADAS: 'https://script.google.com/macros/s/AKfycbwAhUmf0hZoMWHnyYTiMsO1cTdkfAHw0yKujYsjGnnIMwqiFAgxn3HLrGXJHqhRDluy/exec',
+    URL_ENTRADAS: 'httpsexport const config = {
+    api: {
+        bodyParser: false, // Essencial: impede o Vercel de corromper o arquivo binário (imagem/PDF)
+    },
+};
+
+export default async function handler(req, res) {
+    // Permite apenas requisições POST
+    if (req.method !== 'POST') {
+        return res.status(405).json({ message: 'Método não permitido. Use POST.' });
+    }
+
+    // 🔴 COLE AQUI A URL DO SEU WEBHOOK DE UPLOAD DO N8N (Aquele que lê a DANFE)
+    const N8N_WEBHOOK_URL = 'https://n8n.labzratz.tech/webhook-test/upload-document';
+
+    try {
+        const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+                // Mantém o cabeçalho original, fundamental para arquivos multipart/form-data
+                'content-type': req.headers['content-type'],
+            },
+            body: req, // Repassa o fluxo (stream) do arquivo diretamente
+            duplex: 'half' // Necessário no Node.js 18+ para envio de streams
+        });
+
+        if (!n8nResponse.ok) {
+            const textError = await n8nResponse.text();
+            console.error("Erro no n8n ao processar arquivo:", textError);
+            return res.status(n8nResponse.status).json({ 
+                success: false, 
+                message: 'O servidor n8n falhou ao processar o arquivo.' 
+            });
+        }
+
+        const data = await n8nResponse.json();
+        
+        // Devolve os dados extraídos pela IA de volta para o frontend
+        return res.status(200).json(data);
+
+    } catch (error) {
+        console.error("Erro de comunicação Vercel -> n8n (Upload):", error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Falha de comunicação com o servidor n8n.' 
+        });
+    }
+}://script.google.com/macros/s/AKfycbwAhUmf0hZoMWHnyYTiMsO1cTdkfAHw0yKujYsjGnnIMwqiFAgxn3HLrGXJHqhRDluy/exec',
     URL_SAIDAS: 'https://script.google.com/macros/s/AKfycbzwFx41WOsrBhI9ydCNFSytfhfu47aL1yt0MVXYUDl4dPol4bjuHv10tYXks_LHSoDT/exec?aba=Saidas',
     URL_N8N_UPLOAD: '/api/upload',
     
