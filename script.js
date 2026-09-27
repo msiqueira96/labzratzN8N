@@ -664,22 +664,52 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const btnSalvar = document.getElementById('btnSalvarRegistro');
         const payload = obterDadosFormulario();
-        const urlDestino = payload.tipoTransacao === 'Entrada' ? CONFIG.URL_ENTRADAS : CONFIG.URL_SAIDAS;
 
         try {
             if (btnSalvar) {
                 btnSalvar.disabled = true;
-                btnSalvar.innerText = 'Salvando...';
+                btnSalvar.innerText = 'Verificando e Salvando...';
             }
 
-            const res = await fetch(urlDestino, {
+            // Dispara para a sua nova rota no Vercel, que fará a ponte sem erro de CORS
+            const res = await fetch(CONFIG.URL_SALVAR, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json' 
+                },
                 body: JSON.stringify(payload)
             });
 
-            if (!res.ok) throw new Error('Falha ao comunicar com o servidor/Google Sheets.');
+            if (!res.ok) {
+                throw new Error('Falha na comunicação com a API do Vercel.');
+            }
 
+            const resposta = await res.json();
+
+            // Trata a resposta do n8n (caso o webhook retorne success: false por duplicidade)
+            if (resposta.success === false) {
+                throw new Error(resposta.message || resposta.mensagem || 'Documento já cadastrado ou falha ao salvar.');
+            }
+
+            alert(resposta.message || resposta.mensagem || 'Movimentação gravada com sucesso!');
+
+            // Limpeza da interface
+            document.getElementById('formMovimentacao').reset();
+            const aiStatus = document.getElementById('aiUploadStatus');
+            if (aiStatus) aiStatus.innerText = '';
+            UI.closeModal('modalMovimentacao');
+            
+            // Recarrega a tabela
+            carregarDados();
+
+        } catch (err) {
+            alert('⚠️ ' + err.message);
+        } finally {
+            if (btnSalvar) {
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = 'Salvar Registro';
+            }
+        }
             alert('Movimentação gravada com sucesso!');
             document.getElementById('formMovimentacao').reset();
             if (aiStatus) aiStatus.innerText = '';
