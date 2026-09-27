@@ -6,7 +6,10 @@
 const CONFIG = {
     URL_ENTRADAS: 'https://script.google.com/macros/s/AKfycbwAhUmf0hZoMWHnyYTiMsO1cTdkfAHw0yKujYsjGnnIMwqiFAgxn3HLrGXJHqhRDluy/exec',
     URL_SAIDAS: 'https://script.google.com/macros/s/AKfycbzwFx41WOsrBhI9ydCNFSytfhfu47aL1yt0MVXYUDl4dPol4bjuHv10tYXks_LHSoDT/exec?aba=Saidas',
-    URL_N8N_UPLOAD: '/api/upload'
+    URL_N8N_UPLOAD: '/api/upload',
+    
+    // Agora aponta para o Vercel, e o Vercel fala com o n8n
+    URL_SALVAR: '/api/salvar' 
 };
 
 const STATE = {
