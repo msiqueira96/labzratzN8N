@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     }
 
     // 🔴 COLE AQUI A URL DO SEU WEBHOOK DE SALVAR (Fluxo de baixo do n8n)
-    const N8N_WEBHOOK_URL = 'https://n8n.labzratz.tech/webhook-test/salvar-movimentacao';
+    const N8N_WEBHOOK_URL = 'https://n8n.labzratz.tech/webhook/salvar-movimentacao';
 
     try {
         const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
