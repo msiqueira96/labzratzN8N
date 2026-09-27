@@ -9,7 +9,7 @@ const CONFIG = {
     URL_N8N_UPLOAD: '/api/upload',
     
     // NOVA ROTA: Webhook do n8n responsável por verificar duplicidade e SALVAR os dados
-    URL_SALVAR_N8N: 'COLE_AQUI_A_URL_DO_SEU_WEBHOOK1'
+    URL_SALVAR_N8N: 'https://n8n.labzratz.tech/webhook-test/salvar-movimentacao'
 };
 
 const STATE = {
