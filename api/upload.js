@@ -30,7 +30,6 @@ export default async function handler(req, res) {
         return res.status(200).json(data);
 
     } catch (error) {
-        console.error("Erro interno no upload:", error);
         return res.status(500).json({ 
             success: false, 
             message: 'Erro no servidor de upload', 
