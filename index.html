@@ -25,7 +25,7 @@
 </head>
 <body class="text-slate-200 min-h-screen flex items-center justify-center p-4 relative">
 
-    <!-- Input oculto global para seleção múltipla via Bolha (+) -->
+    <!-- Input global oculto para carregar múltiplos documentos via Bolha (+) -->
     <input type="file" id="globalBatchInput" multiple accept="image/*,application/pdf" class="hidden" onchange="window.handleBatchFiles(event)">
 
     <!-- Container Principal do Dashboard -->
@@ -111,7 +111,7 @@
                 </div>
             </header>
 
-            <!-- 4 Top Cards Metric -->
+            <!-- 4 Top Cards Metric (Exatamente como na tua base) -->
             <div class="grid grid-cols-4 gap-4">
                 <div class="bg-[#5c46e5] p-4 rounded-2xl flex justify-between items-center shadow-lg">
                     <div>
@@ -217,7 +217,7 @@
                     </div>
                 </div>
 
-                <!-- Sales Analytics Chart (Intocado conforme pedido) -->
+                <!-- Sales Analytics Chart (Exatamente a estrutura original) -->
                 <div class="col-span-7 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="font-semibold text-white text-sm">Sales Analytics</h3>
@@ -238,4 +238,68 @@
             <!-- Bottom Section: Tabela de Transações -->
             <div class="bg-[#171038] p-5 rounded-2xl border border-indigo-900/30">
                 <div class="flex justify-between items-center mb-4">
-                    <h3
+                    <h3 class="font-semibold text-white text-sm">Documentos & Lançamentos Recentes</h3>
+                    <span class="text-[10px] text-emerald-400 font-mono">● Sincronizado via Google Sheets</span>
+                </div>
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="text-[10px] text-slate-500 border-b border-indigo-900/40">
+                        <tr>
+                            <th class="pb-2 font-medium">ID / Arquivo</th>
+                            <th class="pb-2 font-medium">Fornecedor / Origem</th>
+                            <th class="pb-2 font-medium">Valor</th>
+                            <th class="pb-2 font-medium">Status n8n</th>
+                            <th class="pb-2 font-medium text-right">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody" class="divide-y divide-indigo-900/20 text-[11px]">
+                        <tr class="hover:bg-indigo-900/30 transition">
+                            <td class="py-2.5 font-mono text-cyan-400">#DANFE_94821</td>
+                            <td class="py-2.5 font-medium text-white">Fornecedor XYZ Ltd</td>
+                            <td class="py-2.5 text-rose-400 font-semibold">- R\$ 1.250,00</td>
+                            <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
+                            <td class="py-2.5 text-right text-slate-400">Hoje, 14:22</td>
+                        </tr>
+                        <tr class="hover:bg-indigo-900/30 transition">
+                            <td class="py-2.5 font-mono text-cyan-400">#REC_30291</td>
+                            <td class="py-2.5 font-medium text-white">Hostinger Cloud VPS</td>
+                            <td class="py-2.5 text-rose-400 font-semibold">- R\$ 145,00</td>
+                            <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
+                            <td class="py-2.5 text-right text-slate-400">Ontem, 09:15</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- CONTAINER DAS BOLHAS FLUTUANTES (PILHA COM BOLHA PRINCIPAL + BOLHA (+) DE SELEÇÃO MÚLTIPLA) -->
+    <div id="bubblesContainer" class="fixed bottom-6 right-6 flex flex-col-reverse items-end space-y-reverse space-y-3 z-50 pointer-events-none">
+        
+        <!-- BOLHA MESTRA PRINCIPAL (Arrastável e expansível ao clicar) -->
+        <div id="masterBubble" 
+             class="pointer-events-auto w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group"
+             title="Arraste ou clique para alternar as bolhas">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span id="activeCountBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-cyan-400 rounded-full border-2 border-[#0b071e] text-[10px] font-bold text-slate-900 flex items-center justify-center">0</span>
+        </div>
+
+        <!-- BOLHA (+) PARA SELECIONAR MÚLTIPLOS DOCUMENTOS (Aparece no topo da pilha quando expandido) -->
+        <div id="plusBubbleWrapper" class="stack-item hidden pointer-events-auto flex flex-col items-end mb-2 bubble-enter">
+            <div onclick="document.getElementById('globalBatchInput').click()" 
+                 class="w-11 h-11 rounded-full bg-cyan-500 hover:bg-cyan-400 border-2 border-white shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group"
+                 title="Adicionar múltiplos documentos (OCR)">
+                <span class="text-white text-xl font-bold">+</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const WEBHOOK_N8N_URL = "https://n8n.labzratz.tech/webhook/process-danfe"; 
+        let bubbleCounter = 0;
+        let activeScannersCount = 0;
+        let isExpanded = false;
+
+        // --- SISTEMA DE ARRASTAR A BOLHA PRINCIPAL (DRAG & DROP) ---
+        const masterBubble = document.getElementById('
