@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMART POS - Fluxo de Caixa & Bolhas Flutuantes</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Carregamento do Chart.js -->
+    <!-- Carregamento do Chart.js original -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -118,7 +118,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-indigo-100 font-medium">Entradas (Mês)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R$ 48.250,00</p>
+                        <p class="text-2xl font-bold text-white">R\$ 48.250,00</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -135,7 +135,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-cyan-100 font-medium">Saídas (OCR)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R$ 14.120,50</p>
+                        <p class="text-2xl font-bold text-white" id="cardTotalSaidas">R\$ 0,00</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -152,7 +152,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-purple-100 font-medium">Caixa Líquido</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R$ 34.129,50</p>
+                        <p class="text-2xl font-bold text-white">R\$ 34.129,50</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -207,16 +207,16 @@
                     <div class="space-y-2 pt-2 border-t border-indigo-900/40 text-xs">
                         <div class="flex justify-between text-slate-300">
                             <span>Processados com Sucesso</span>
-                            <span class="font-bold text-white">128 docs</span>
+                            <span class="font-bold text-white" id="countSuccessDocs">0 docs</span>
                         </div>
                         <div class="flex justify-between text-slate-300">
                             <span>Duplicados Ignorados</span>
-                            <span class="font-bold text-white">3 docs</span>
+                            <span class="font-bold text-white">0 docs</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sales Analytics Chart (Chart.js restaurado perfeitamente) -->
+                <!-- Sales Analytics Chart -->
                 <div class="col-span-7 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="font-semibold text-white text-sm">Sales Analytics</h3>
@@ -237,8 +237,8 @@
             <!-- Bottom Section: Tabela de Transações -->
             <div class="bg-[#171038] p-5 rounded-2xl border border-indigo-900/30">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-semibold text-white text-sm">Documentos & Lançamentos Recentes</h3>
-                    <span class="text-[10px] text-emerald-400 font-mono">● Sincronizado via Google Sheets</span>
+                    <h3 class="font-semibold text-white text-sm">Documentos & Lançamentos Recentes (Google Sheets)</h3>
+                    <button onclick="carregarDadosDoDashboard()" class="text-[10px] text-cyan-400 font-mono bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-900 hover:text-white transition cursor-pointer">🔄 Atualizar Planilha</button>
                 </div>
                 <table class="w-full text-left text-xs text-slate-300">
                     <thead class="text-[10px] text-slate-500 border-b border-indigo-900/40">
@@ -253,15 +253,7 @@
                         </tr>
                     </thead>
                     <tbody id="transactionTableBody" class="divide-y divide-indigo-900/20 text-[11px]">
-                        <tr class="hover:bg-indigo-900/30 transition">
-                            <td class="py-2.5 font-mono text-cyan-400">#DANFE_94821</td>
-                            <td class="py-2.5 text-slate-400">Hoje, 14:22</td>
-                            <td class="py-2.5 font-medium text-white">Fornecedor XYZ Ltd</td>
-                            <td class="py-2.5 font-mono text-slate-400">00.000.000/0001-00</td>
-                            <td class="py-2.5 text-slate-300">Admin</td>
-                            <td class="py-2.5 text-slate-300">Pix</td>
-                            <td class="py-2.5 text-rose-400 font-semibold text-right">- R$ 1.250,00</td>
-                        </tr>
+                        <!-- Dados injetados automaticamente do Apps Script -->
                     </tbody>
                 </table>
             </div>
@@ -269,14 +261,14 @@
         </main>
     </div>
 
-    <!-- OVERLAY ESTILO WINDOWS TASK VIEW (FUNDO OPACO COM AS TELAS EM GRADE) -->
+    <!-- OVERLAY ESTILO WINDOWS TASK VIEW -->
     <div id="taskViewOverlay" onclick="window.handleOverlayBackgroundClick(event)" class="fixed inset-0 bg-[#0b071e]/85 backdrop-blur-md z-40 hidden flex flex-col items-center justify-start p-8 overflow-y-auto">
         <div class="w-full max-w-[1320px] flex justify-between items-center mb-6 pb-3 border-b border-indigo-900/50 pointer-events-auto">
             <div class="flex items-center space-x-3">
                 <span class="text-xl">🤖</span>
                 <div>
                     <h2 class="text-sm font-bold text-white">Central de Documentos OCR (Visão em Grade)</h2>
-                    <p class="text-[11px] text-slate-400">Leitura automática via Serverless (/api/upload) e salvamento no Google Sheets via (/api/salvar).</p>
+                    <p class="text-[11px] text-slate-400">Leitura via /api/upload e envio direto para o Google Apps Script.</p>
                 </div>
             </div>
             <button type="button" onclick="window.minimizeAllToDashboard()" class="bg-indigo-600/40 hover:bg-indigo-600 border border-indigo-400/40 text-white px-4 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer">
@@ -285,708 +277,3 @@
         </div>
 
         <div id="taskViewGrid" class="w-full max-w-[1320px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pointer-events-auto pb-20"></div>
-    </div>
-
-    <!-- CONTAINER DAS BOLHAS FLUTUANTES -->
-    <div id="bubblesContainer" class="fixed bottom-6 right-6 flex flex-col-reverse items-end space-y-reverse space-y-3 z-50 pointer-events-none">
-        
-        <!-- BOLHA MESTRA PRINCIPAL -->
-        <div id="masterBubble" 
-             class="pointer-events-auto w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group"
-             title="Clique para abrir as telas ou voltar ao Dashboard">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-            <span id="activeCountBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-cyan-400 rounded-full border-2 border-[#0b071e] text-[10px] font-bold text-slate-900 flex items-center justify-center">0</span>
-        </div>
-
-        <!-- BOLHA (+) PARA SELECIONAR MÚLTIPLOS DOCUMENTOS -->
-        <div id="plusBubbleWrapper" class="stack-item hidden pointer-events-auto flex flex-col items-end mb-2 bubble-enter">
-            <div onclick="document.getElementById('globalBatchInput').click()" 
-                 class="w-11 h-11 rounded-full bg-cyan-500 hover:bg-cyan-400 border-2 border-white shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group"
-                 title="Adicionar múltiplos documentos (OCR Automático)">
-                <span class="text-white text-xl font-bold">+</span>
-            </div>
-        </div>
-
-        <!-- BOLHA DE SALVAR TUDO NO GOOGLE SHEETS -->
-        <div id="saveAllBubbleWrapper" class="stack-item hidden pointer-events-auto flex flex-col items-end mb-2 bubble-enter">
-            <div id="saveAllBubbleBtn" onclick="window.saveAllBubblesToSheets()" 
-                 class="w-11 h-11 rounded-full bg-emerald-500 hover:bg-emerald-400 border-2 border-white shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group"
-                 title="Salvar todas as bolhas abertas no Google Sheets">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                    <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        const API_OCR_UPLOAD_URL = "/api/upload"; 
-        const API_SHEETS_SALVAR_URL = "/api/salvar";
-
-        let bubbleCounter = 0;
-        let activeScannersCount = 0;
-        let isExpanded = false;
-        const bubbleState = {};
-
-        // --- SISTEMA DE ARRASTAR A BOLHA PRINCIPAL ---
-        const masterBubble = document.getElementById('masterBubble');
-        let isDragging = false;
-        let hasMoved = false;
-        let startX, startY, initialX, initialY;
-
-        masterBubble.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', dragEnd);
-
-        masterBubble.addEventListener('touchstart', dragStart);
-        document.addEventListener('touchmove', drag);
-        document.addEventListener('touchend', dragEnd);
-
-        function dragStart(e) {
-            isDragging = true;
-            hasMoved = false;
-            startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-            startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-            const rect = masterBubble.getBoundingClientRect();
-            initialX = window.innerWidth - rect.right;
-            initialY = window.innerHeight - rect.bottom;
-            masterBubble.style.transition = 'none';
-        }
-
-        function drag(e) {
-            if (!isDragging) return;
-            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-            
-            const dx = startX - clientX;
-            const dy = startY - clientY;
-
-            if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
-                hasMoved = true;
-            }
-
-            masterBubble.style.right = `${initialX + dx}px`;
-            masterBubble.style.bottom = `${initialY + dy}px`;
-        }
-
-        function dragEnd() {
-            isDragging = false;
-            masterBubble.style.transition = 'all 0.2s ease';
-        }
-
-        masterBubble.addEventListener('click', (e) => {
-            if (hasMoved) return;
-            const overlay = document.getElementById('taskViewOverlay');
-            const isOverlayOpen = !overlay.classList.contains('hidden');
-
-            if (isOverlayOpen) {
-                window.minimizeAllToDashboard();
-            } else {
-                isExpanded = !isExpanded;
-                toggleStackVisibility(isExpanded);
-                if (isExpanded && activeScannersCount > 0) {
-                    window.openAllInTaskView();
-                }
-            }
-        });
-
-        function toggleStackVisibility(show) {
-            const stackItems = document.querySelectorAll('.stack-item');
-            stackItems.forEach(item => {
-                if (show) {
-                    item.classList.remove('hidden');
-                } else {
-                    item.classList.add('hidden');
-                }
-            });
-        }
-
-        window.openAllInTaskView = function() {
-            const overlay = document.getElementById('taskViewOverlay');
-            overlay.classList.remove('hidden');
-            Object.keys(bubbleState).forEach(id => {
-                const modal = document.getElementById(`${id}_modal`);
-                if (modal) modal.classList.remove('hidden');
-            });
-        };
-
-        window.minimizeAllToDashboard = function() {
-            const overlay = document.getElementById('taskViewOverlay');
-            overlay.classList.add('hidden');
-            isExpanded = false;
-            toggleStackVisibility(false);
-        };
-
-        window.handleOverlayBackgroundClick = function(e) {
-            if (e.target.id === 'taskViewOverlay' || e.target.id === 'taskViewGrid') {
-                window.minimizeAllToDashboard();
-            }
-        };
-
-        // --- SELEÇÃO DE MÚLTIPLOS FICHEIROS ---
-        window.handleBatchFiles = function(e) {
-            const files = e.target.files;
-            if (!files || files.length === 0) return;
-
-            for (let i = 0; i < files.length; i++) {
-                createScannerBubbleFromFile(files[i]);
-            }
-
-            e.target.value = '';
-            isExpanded = true;
-            toggleStackVisibility(true);
-            window.openAllInTaskView();
-        };
-
-        function createScannerBubbleFromFile(file) {
-            bubbleCounter++;
-            activeScannersCount++;
-            updateBadge();
-            
-            const id = `scanner_${bubbleCounter}`;
-            const saveAllBubbleWrapper = document.getElementById('saveAllBubbleWrapper');
-            const taskViewGrid = document.getElementById('taskViewGrid');
-            const shortFileTitle = file.name.substring(0, 22);
-
-            bubbleState[id] = {
-                file: file,
-                hasError: false,
-                isReading: true
-            };
-
-            const cardHTML = `
-                <div id="${id}_modal" class="bubble-enter w-full bg-[#171038] border-2 border-indigo-600/50 rounded-2xl shadow-2xl p-5 text-xs flex flex-col justify-between transition-all">
-                    <div>
-                        <div class="flex justify-between items-center pb-2.5 border-b border-indigo-900/40 mb-3">
-                            <div class="flex items-center space-x-2">
-                                <span id="${id}_robotStatus" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
-                                <span class="font-bold text-white truncate max-w-[200px]" title="${file.name}">Doc #${bubbleCounter}: ${shortFileTitle}</span>
-                            </div>
-                            <div class="flex items-center space-x-1">
-                                <button type="button" onclick="window.toggleBubble('${id}', true)" class="w-6 h-6 rounded hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white font-bold cursor-pointer" title="Minimizar">_</button>
-                                <button type="button" onclick="window.closeBubble('${id}')" class="w-6 h-6 rounded hover:bg-rose-500/20 flex items-center justify-center text-rose-400 font-bold cursor-pointer" title="Fechar">✕</button>
-                            </div>
-                        </div>
-
-                        <form id="${id}_form" onsubmit="window.handleSingleSaveSubmit(event, '${id}')" class="space-y-2.5">
-                            <div>
-                                <label class="text-[10px] text-slate-400 block mb-0.5">Arquivo Enviado ao OCR</label>
-                                <input type="text" readonly value="${file.name}" class="w-full bg-[#1e1545]/60 border border-indigo-950 rounded-lg px-2.5 py-1 text-[10px] text-cyan-300">
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="text-[10px] text-slate-400 block mb-0.5">ID (Código/Barras)</label>
-                                    <input type="text" id="${id}_id" value="" placeholder="Aguardando OCR..." oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-cyan-400 font-mono focus:outline-none focus:border-cyan-400">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-400 block mb-0.5">Data</label>
-                                    <input type="date" id="${id}_data" onchange="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="text-[10px] text-slate-400 block mb-0.5">Fornecedor</label>
-                                    <input type="text" id="${id}_fornecedor" required value="" placeholder="Aguardando OCR..." oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-400 block mb-0.5">CNPJ</label>
-                                    <input type="text" id="${id}_cnpj" value="" placeholder="00.000.000/0001-00" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-2">
-                                <div>
-                                    <label class="text-[10px] text-slate-400 block mb-0.5">Operador</label>
-                                    <input type="text" id="${id}_operador" value="" placeholder="Nome" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-400 block mb-0.5">Forma Pagto</label>
-                                    <input type="text" id="${id}_forma_pagamento" value="" placeholder="Pix/Cartão" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-400 block mb-0.5">Valor (R$)</label>
-                                    <input type="text" id="${id}_valor" required placeholder="0,00" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
-                                </div>
-                            </div>
-
-                            <button type="submit" id="${id}_submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 rounded-xl font-semibold shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer active:scale-95 text-xs">
-                                <span>Salvar no Google Sheets</span>
-                            </button>
-                        </form>
-                    </div>
-
-                    <!-- Caixa do Robozinho -->
-                    <div id="${id}_status" class="mt-3 p-2.5 bg-[#1e1545] border border-cyan-500/50 rounded-xl text-[11px] text-cyan-300 flex items-center justify-between space-x-2">
-                        <div class="flex items-center space-x-2">
-                            <span class="text-base">🤖</span>
-                            <span id="${id}_statusText" class="animate-pulse font-semibold">Estou lendo seu documento...</span>
-                        </div>
-                        <button type="button" id="${id}_retryBtn" onclick="window.autoReadDocumentOcr('${id}')" class="hidden shrink-0 bg-rose-500/30 hover:bg-rose-500/50 border border-rose-400/50 text-rose-200 px-2 py-1 rounded-lg text-[10px] font-semibold transition cursor-pointer">
-                            🔄 Reenviar
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            const miniBubbleHTML = `
-                <div id="${id}_wrapper" class="stack-item pointer-events-auto flex flex-col items-end mb-2 bubble-enter">
-                    <div id="${id}_bubble" onclick="window.toggleBubble('${id}', false)" class="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative" title="Abrir Doc #${bubbleCounter}">
-                        <span class="text-xs font-bold text-white">#${bubbleCounter}</span>
-                        <span id="${id}_badge" class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-[#0b071e] animate-ping"></span>
-                    </div>
-                </div>
-            `;
-
-            taskViewGrid.insertAdjacentHTML('beforeend', cardHTML);
-            saveAllBubbleWrapper.insertAdjacentHTML('afterend', miniBubbleHTML);
-            document.getElementById(`${id}_data`).valueAsDate = new Date();
-            window[`${id}_actualFile`] = file;
-
-            window.autoReadDocumentOcr(id);
-        }
-
-        window.toggleBubble = function(id, minimize) {
-            const overlay = document.getElementById('taskViewOverlay');
-            const modal = document.getElementById(`${id}_modal`);
-            if (!modal) return;
-
-            if (minimize) {
-                modal.classList.add('hidden');
-                const anyVisible = Array.from(document.querySelectorAll('#taskViewGrid > div')).some(el => !el.classList.contains('hidden'));
-                if (!anyVisible) {
-                    overlay.classList.add('hidden');
-                }
-            } else {
-                overlay.classList.remove('hidden');
-                modal.classList.remove('hidden');
-            }
-        };
-
-        window.closeBubble = function(id) {
-            const wrapper = document.getElementById(`${id}_wrapper`);
-            const modal = document.getElementById(`${id}_modal`);
-            if (wrapper) wrapper.remove();
-            if (modal) modal.remove();
-            delete bubbleState[id];
-            delete window[`${id}_actualFile`];
-            activeScannersCount = Math.max(0, activeScannersCount - 1);
-            updateBadge();
-
-            if (activeScannersCount === 0) {
-                document.getElementById('taskViewOverlay').classList.add('hidden');
-            }
-        };
-
-        function updateBadge() {
-            const badgeEl = document.getElementById('activeCountBadge');
-            if (badgeEl) badgeEl.innerText = activeScannersCount;
-        }
-
-        function markBubbleRedError(id, errorMsg) {
-            if (bubbleState[id]) {
-                bubbleState[id].hasError = true;
-                bubbleState[id].isReading = false;
-            }
-            const modal = document.getElementById(`${id}_modal`);
-            const bubble = document.getElementById(`${id}_bubble`);
-            const badge = document.getElementById(`${id}_badge`);
-            const robotStatus = document.getElementById(`${id}_robotStatus`);
-            const statusDiv = document.getElementById(`${id}_status`);
-            const statusText = document.getElementById(`${id}_statusText`);
-            const retryBtn = document.getElementById(`${id}_retryBtn`);
-
-            if (modal) {
-                modal.classList.remove('border-indigo-600/50', 'border-emerald-500');
-                modal.classList.add('border-rose-500');
-            }
-            if (bubble) {
-                bubble.className = "w-11 h-11 rounded-full bg-gradient-to-br from-rose-600 to-red-700 border-2 border-rose-300 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative animate-pulse";
-            }
-            if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-[#0b071e]";
-            if (robotStatus) robotStatus.className = "w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping";
-            if (statusDiv && statusText) {
-                statusDiv.className = "mt-3 p-2.5 bg-rose-950/60 border border-rose-500 rounded-xl text-[11px] text-rose-200 flex items-center justify-between space-x-2";
-                statusText.className = "";
-                statusText.innerHTML = `<span class="text-rose-400 font-bold">Erro:</span> ${errorMsg}`;
-            }
-            if (retryBtn) retryBtn.classList.remove('hidden');
-        }
-
-        window.clearBubbleError = function(id) {
-            if (!bubbleState[id] || !bubbleState[id].hasError) return;
-            bubbleState[id].hasError = false;
-            const modal = document.getElementById(`${id}_modal`);
-            const bubble = document.getElementById(`${id}_bubble`);
-            const badge = document.getElementById(`${id}_badge`);
-            const robotStatus = document.getElementById(`${id}_robotStatus`);
-            const statusDiv = document.getElementById(`${id}_status`);
-            const statusText = document.getElementById(`${id}_statusText`);
-            const retryBtn = document.getElementById(`${id}_retryBtn`);
-
-            if (modal) {
-                modal.classList.remove('border-rose-500');
-                modal.classList.add('border-indigo-600/50');
-            }
-            if (bubble) {
-                bubble.className = "w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative";
-            }
-            if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-[#0b071e]";
-            if (robotStatus) robotStatus.className = "w-2.5 h-2.5 rounded-full bg-cyan-400";
-            if (statusDiv && statusText) {
-                statusDiv.className = "mt-3 p-2.5 bg-[#1e1545] border border-indigo-900/50 rounded-xl text-[11px] text-slate-300 flex items-center justify-between space-x-2";
-                statusText.innerHTML = `Dados prontos para salvar.`;
-            }
-            if (retryBtn) retryBtn.classList.add('hidden');
-        };
-
-        // --- LEITURA AUTOMÁTICA VIA /api/upload ---
-        window.autoReadDocumentOcr = async function(id) {
-            const file = window[`${id}_actualFile`];
-            if (!file || !bubbleState[id]) return;
-
-            window.clearBubbleError(id);
-            bubbleState[id].isReading = true;
-
-            const idInput = document.getElementById(`${id}_id`);
-            const fornecedorInput = document.getElementById(`${id}_fornecedor`);
-            const cnpjInput = document.getElementById(`${id}_cnpj`);
-            const operadorInput = document.getElementById(`${id}_operador`);
-            const formaPagamentoInput = document.getElementById(`${id}_forma_pagamento`);
-            const valorInput = document.getElementById(`${id}_valor`);
-            const dataInput = document.getElementById(`${id}_data`);
-            
-            const submitBtn = document.getElementById(`${id}_submitBtn`);
-            const statusDiv = document.getElementById(`${id}_status`);
-            const statusText = document.getElementById(`${id}_statusText`);
-            const retryBtn = document.getElementById(`${id}_retryBtn`);
-            const robotStatus = document.getElementById(`${id}_robotStatus`);
-            const badge = document.getElementById(`${id}_badge`);
-
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = `<span>⏳ Aguardando leitura do n8n...</span>`;
-            }
-            if (retryBtn) retryBtn.classList.add('hidden');
-            if (statusDiv && statusText) {
-                statusDiv.className = "mt-3 p-2.5 bg-[#1e1545] border border-cyan-500/50 rounded-xl text-[11px] text-cyan-300 flex items-center justify-between space-x-2";
-                statusText.className = "animate-pulse font-semibold";
-                statusText.innerHTML = `Estou lendo seu documento...`;
-            }
-            if (robotStatus) robotStatus.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping";
-            if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-[#0b071e] animate-ping";
-
-            try {
-                const formData = new FormData();
-                formData.append('instanceId', id);
-                formData.append('file', file, file.name);
-                formData.append('data', file, file.name);
-
-                const response = await fetch(API_OCR_UPLOAD_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const errJson = await response.json().catch(() => ({}));
-                    throw new Error(errJson.message || errJson.error || `Erro HTTP ${response.status} em /api/upload`);
-                }
-
-                const rawResult = await response.json();
-                let result = Array.isArray(rawResult) ? rawResult[0] : rawResult;
-                if (result && result.data && typeof result.data === 'object') result = result.data;
-                if (result && result.output && typeof result.output === 'object') result = result.output;
-
-                if (!result || result.error) {
-                    throw new Error(result?.error || "O n8n não retornou os dados extraídos.");
-                }
-
-                const idVal = result.id || result.codigo_barras || result.barcode || result.documento_id || `#DANFE_${Math.floor(Math.random()*90000+10000)}`;
-                const fornecedorVal = result.fornecedor || result.vendor || result.description || result.estabelecimento || result.nome || result.emitente;
-                const cnpjVal = result.cnpj || result.documento;
-                const operadorVal = result.operador || result.user || result.atendente;
-                const formaPagtoVal = result.forma_de_pagamento || result.formaPagamento || result.pagamento || result.forma;
-                const valorVal = result.valor || result.amount || result.total || result.valor_total || result.value;
-                const dataVal = result.data || result.date || result.data_emissao || result.vencimento;
-
-                if (idVal && idInput) idInput.value = idVal;
-                if (fornecedorVal && fornecedorInput) fornecedorInput.value = fornecedorVal;
-                if (cnpjVal && cnpjInput) cnpjInput.value = cnpjVal;
-                if (operadorVal && operadorInput) operadorInput.value = operadorVal;
-                if (formaPagtoVal && formaPagamentoInput) formaPagamentoInput.value = formaPagtoVal;
-                if (valorVal !== undefined && valorVal !== null && valorInput) {
-                    valorInput.value = String(valorVal).replace('R$', '').trim();
-                }
-                if (dataVal && dataInput) {
-                    if (/^\d{4}-\d{2}-\d{2}/.test(dataVal)) {
-                        dataInput.value = dataVal.substring(0, 10);
-                    } else if (/^\d{2}\/\d{2}\/\d{4}/.test(dataVal)) {
-                        const parts = dataVal.substring(0, 10).split('/');
-                        dataInput.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                    }
-                }
-
-                bubbleState[id].isReading = false;
-                if (statusDiv && statusText) {
-                    statusDiv.className = "mt-3 p-2.5 bg-emerald-950/40 border border-emerald-500/50 rounded-xl text-[11px] text-emerald-300 flex items-center justify-between space-x-2";
-                    statusText.className = "font-semibold";
-                    statusText.innerHTML = `Leitura concluída! ID e dados carregados.`;
-                }
-                if (robotStatus) robotStatus.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
-                if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
-            } catch (err) {
-                markBubbleRedError(id, err.message || "Falha ao processar leitura via /api/upload.");
-            } finally {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = `<span>Salvar no Google Sheets</span>`;
-                }
-            }
-        };
-
-        function validateSingleBubble(id) {
-            if (!bubbleState[id]) return null;
-
-            if (bubbleState[id].isReading) {
-                markBubbleRedError(id, "Aguarde o término da leitura automática.");
-                return null;
-            }
-            if (bubbleState[id].hasError) return null;
-
-            const idInput = document.getElementById(`${id}_id`);
-            const fornecedorInput = document.getElementById(`${id}_fornecedor`);
-            const cnpjInput = document.getElementById(`${id}_cnpj`);
-            const operadorInput = document.getElementById(`${id}_operador`);
-            const formaPagamentoInput = document.getElementById(`${id}_forma_pagamento`);
-            const valorInput = document.getElementById(`${id}_valor`);
-            const dataInput = document.getElementById(`${id}_data`);
-
-            const docId = idInput ? idInput.value.trim() : `#DANFE_${Math.floor(Math.random()*90000+10000)}`;
-            const fornecedor = fornecedorInput ? fornecedorInput.value.trim() : "";
-            const cnpj = cnpjInput ? cnpjInput.value.trim() : "";
-            const operador = operadorInput ? operadorInput.value.trim() : "";
-            const forma_pagamento = formaPagamentoInput ? formaPagamentoInput.value.trim() : "";
-            const valor = valorInput ? valorInput.value.trim() : "";
-            const data = dataInput ? dataInput.value : "";
-
-            if (!fornecedor) {
-                markBubbleRedError(id, "O campo Fornecedor é obrigatório.");
-                return null;
-            }
-            if (!valor || valor === "0,00" || valor === "0") {
-                markBubbleRedError(id, "O Valor é obrigatório.");
-                return null;
-            }
-            if (!data) {
-                markBubbleRedError(id, "A Data é obrigatória.");
-                return null;
-            }
-
-            return {
-                instanceId: id,
-                fileName: bubbleState[id].file ? bubbleState[id].file.name : "",
-                id: docId,
-                fornecedor: fornecedor,
-                cnpj: cnpj,
-                operador: operador,
-                forma_pagamento: forma_pagamento,
-                valor: valor,
-                data: data
-            };
-        }
-
-        // --- SALVAR INDIVIDUAL VIA /api/salvar ---
-        window.handleSingleSaveSubmit = async function(e, id) {
-            e.preventDefault();
-            const validItem = validateSingleBubble(id);
-            if (!validItem) return;
-
-            const submitBtn = document.getElementById(`${id}_submitBtn`);
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = `<span>🤖 Salvando...</span>`;
-            }
-
-            try {
-                const response = await fetch(API_SHEETS_SALVAR_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ items: [validItem], ...validItem })
-                });
-
-                if (!response.ok) {
-                    const errJson = await response.json().catch(() => ({}));
-                    throw new Error(errJson.message || errJson.error || `Erro ao salvar (${response.status})`);
-                }
-
-                const resData = await response.json();
-                if (resData && resData.success === false) {
-                    throw new Error(resData.message || "Erro ao salvar.");
-                }
-
-                addTransactionToTable(
-                    validItem.id,
-                    validItem.data,
-                    validItem.fornecedor,
-                    validItem.cnpj,
-                    validItem.operador,
-                    validItem.forma_pagamento,
-                    `R$ ${validItem.valor}`
-                );
-                window.closeBubble(id);
-            } catch (err) {
-                markBubbleRedError(id, err.message || "Falha ao salvar no Google Sheets.");
-            } finally {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = `<span>Salvar no Google Sheets</span>`;
-                }
-            }
-        };
-
-        // --- SALVAR TUDO VIA /api/salvar ---
-        window.saveAllBubblesToSheets = async function() {
-            const ids = Object.keys(bubbleState);
-            if (ids.length === 0) return;
-
-            let hasAnyError = false;
-            const batchItems = [];
-
-            for (const id of ids) {
-                const validItem = validateSingleBubble(id);
-                if (!validItem) {
-                    hasAnyError = true;
-                } else {
-                    batchItems.push(validItem);
-                }
-            }
-
-            if (hasAnyError) {
-                window.openAllInTaskView();
-                return;
-            }
-
-            try {
-                const response = await fetch(API_SHEETS_SALVAR_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ items: batchItems })
-                });
-
-                if (!response.ok) {
-                    const errJson = await response.json().catch(() => ({}));
-                    throw new Error(errJson.message || errJson.error || `Erro ao salvar lote`);
-                }
-
-                const resData = await response.json();
-                if (resData && resData.success === false) {
-                    throw new Error(resData.message || "Erro ao salvar lote.");
-                }
-
-                batchItems.forEach(item => {
-                    addTransactionToTable(
-                        item.id,
-                        item.data,
-                        item.fornecedor,
-                        item.cnpj,
-                        item.operador,
-                        item.forma_pagamento,
-                        `R$ ${item.valor}`
-                    );
-                    window.closeBubble(item.instanceId);
-                });
-            } catch (err) {
-                ids.forEach(id => {
-                    markBubbleRedError(id, err.message || "Falha ao salvar lote.");
-                });
-                window.openAllInTaskView();
-            }
-        };
-
-        function addTransactionToTable(id, data, fornecedor, cnpj, operador, forma_pagamento, valor) {
-            const tbody = document.getElementById('transactionTableBody');
-            const row = `
-                <tr class="bg-indigo-900/30 transition">
-                    <td class="py-2.5 font-mono text-cyan-400">${id}</td>
-                    <td class="py-2.5 text-slate-400">${data}</td>
-                    <td class="py-2.5 font-medium text-white">${fornecedor}</td>
-                    <td class="py-2.5 font-mono text-slate-400">${cnpj || '-'}</td>
-                    <td class="py-2.5 text-slate-300">${operador || '-'}</td>
-                    <td class="py-2.5 text-slate-300">${forma_pagamento || '-'}</td>
-                    <td class="py-2.5 text-rose-400 font-semibold text-right">- ${valor}</td>
-                </tr>
-            `;
-            tbody.insertAdjacentHTML('afterbegin', row);
-        }
-
-        function filterTable() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('#transactionTableBody tr');
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(input) ? '' : 'none';
-            });
-        }
-
-        // --- CHART.JS ORIGINAL DO INDEX 9 (Intocado) ---
-        function renderChart() {
-            try {
-                if (typeof Chart !== 'undefined') {
-                    const canvas = document.getElementById('salesAnalyticsChart');
-                    if (!canvas) return;
-                    const ctx = canvas.getContext('2d');
-                    
-                    new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: ['01 JAN', '01 FEB', '01 MAR', '01 ARP', '01 MAY', '01 JUN', '01 JUL', '01 AUG', '01 SEP', '01 OCT'],
-                            datasets: [
-                                {
-                                    type: 'bar',
-                                    label: 'Entradas',
-                                    data: [400, 680, 500, 800, 200, 350, 150, 360, 820, 500],
-                                    backgroundColor: '#00f2fe',
-                                    borderRadius: 4,
-                                    barThickness: 10,
-                                    yAxisID: 'y'
-                                },
-                                {
-                                    type: 'bar',
-                                    label: 'Saídas',
-                                    data: [230, 420, 350, 270, 430, 220, 170, 310, 220, 160],
-                                    backgroundColor: '#a82ce0',
-                                    borderRadius: 4,
-                                    barThickness: 10,
-                                    yAxisID: 'y'
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
-                            scales: {
-                                x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 9 } } },
-                                y: { type: 'linear', position: 'left', min: 0, max: 800, ticks: { stepSize: 200, color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(99, 102, 241, 0.1)' } },
-                                y1: { type: 'linear', position: 'right', min: 0, max: 80, ticks: { stepSize: 20, color: '#64748b', font: { size: 9 } }, grid: { display: false } }
-                            }
-                        }
-                    });
-                }
-            } catch (err) {
-                console.warn("Chart.js não pôde ser carregado:", err);
-            }
-        }
-
-        if (document.readyState === 'complete') {
-            renderChart();
-        } else {
-            window.addEventListener('load', renderChart);
-        }
-    </script>
-</body>
-</html>
