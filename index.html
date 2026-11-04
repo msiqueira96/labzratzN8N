@@ -28,7 +28,7 @@
     <!-- Input global oculto para seleção múltipla -->
     <input type="file" id="globalBatchInput" multiple accept="image/*,application/pdf" class="hidden" onchange="window.handleBatchFiles(event)">
 
-    <!-- SIDEBAR ESTILO FLUXO 2.0 -->
+    <!-- SIDEBAR FLUXO 2.0 -->
     <aside class="w-64 bg-[#0d1527] text-slate-300 flex flex-col justify-between p-6 shrink-0 min-h-screen shadow-xl">
         <div>
             <!-- Logo / Título -->
@@ -67,7 +67,7 @@
             </nav>
         </div>
 
-        <!-- Perfil do Operador na Sidebar -->
+        <!-- Perfil do Operador -->
         <div class="bg-slate-900/60 p-3.5 rounded-2xl border border-slate-800 flex items-center space-x-3">
             <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-xs">
                 OP
@@ -82,7 +82,7 @@
     <!-- MAIN CONTENT AREA -->
     <main class="flex-1 p-8 space-y-6 overflow-y-auto">
 
-        <!-- Top Section: Total Saídas + Gráficos (Despesas por Categoria e Proporção Entrada x Saída) -->
+        <!-- Top Section: Total Saídas + Gráficos -->
         <div class="grid grid-cols-12 gap-6">
             
             <!-- Card Total Saídas -->
@@ -100,7 +100,7 @@
                 </div>
             </div>
 
-            <!-- Gráfico 1: Despesas por Categoria (Doughnut) -->
+            <!-- Gráfico 1: Despesas por Categoria -->
             <div class="col-span-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="font-bold text-slate-800 text-sm">Despesas por Categoria</h3>
@@ -115,7 +115,7 @@
                 </div>
             </div>
 
-            <!-- Gráfico 2: Proporção Entrada x Saída (Pie) -->
+            <!-- Gráfico 2: Proporção Entrada x Saída -->
             <div class="col-span-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="font-bold text-slate-800 text-sm">Proporção Entrada x Saída</h3>
@@ -143,11 +143,11 @@
             <table class="w-full text-left text-xs text-slate-600">
                 <thead class="text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-100">
                     <tr>
-                        <th class="pb-3 font-semibold">Data</th>
-                        <th class="pb-3 font-semibold">Fonte / Fornecedor</th>
-                        <th class="pb-3 font-semibold">Categoria</th>
-                        <th class="pb-3 font-semibold">Tipo</th>
-                        <th class="pb-3 font-semibold text-right">Valor</th>
+                        <th class="pb-3 font-semibold">DATA</th>
+                        <th class="pb-3 font-semibold">FONTE / FORNECEDOR</th>
+                        <th class="pb-3 font-semibold">CATEGORIA</th>
+                        <th class="pb-3 font-semibold">TIPO</th>
+                        <th class="pb-3 font-semibold text-right">VALOR</th>
                     </tr>
                 </thead>
                 <tbody id="transactionTableBody" class="divide-y divide-slate-100 text-xs">
@@ -176,14 +176,14 @@
 
     </main>
 
-    <!-- OVERLAY ESTILO WINDOWS TASK VIEW (GRADE CENTRALIZADA COM FUNDO OPACO) -->
+    <!-- OVERLAY ESTILO WINDOWS TASK VIEW (FUNDO OPACO COM AS TELAS EM GRADE) -->
     <div id="taskViewOverlay" onclick="window.handleOverlayBackgroundClick(event)" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-40 hidden flex flex-col items-center justify-start p-8 overflow-y-auto">
         <div class="w-full max-w-[1320px] flex justify-between items-center mb-6 pb-3 border-b border-slate-800 pointer-events-auto">
             <div class="flex items-center space-x-3 text-white">
                 <span class="text-xl">🤖</span>
                 <div>
                     <h2 class="text-sm font-bold">Central de Documentos OCR (Visão em Grade)</h2>
-                    <p class="text-[11px] text-slate-400">Envio automático via Serverless (/api/upload) e salvamento em lote ou individual via (/api/salvar).</p>
+                    <p class="text-[11px] text-slate-400">Leitura automática via Serverless (/api/upload) e salvamento no Google Sheets via (/api/salvar).</p>
                 </div>
             </div>
             <button type="button" onclick="window.minimizeAllToDashboard()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer border border-slate-700">
@@ -191,6 +191,7 @@
             </button>
         </div>
 
+        <!-- Grade com os formulários de documentos -->
         <div id="taskViewGrid" class="w-full max-w-[1320px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pointer-events-auto pb-20"></div>
     </div>
 
@@ -333,7 +334,7 @@
             }
         };
 
-        // --- SELEÇÃO MÚLTIPLA DE FICHEIROS ---
+        // --- SELEÇÃO DE MÚLTIPLOS FICHEIROS ---
         window.handleBatchFiles = function(e) {
             const files = e.target.files;
             if (!files || files.length === 0) return;
