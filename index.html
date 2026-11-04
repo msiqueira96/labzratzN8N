@@ -110,7 +110,7 @@
                 </div>
             </header>
 
-            <!-- 4 Top Cards Metric (Usando entidade HTML &#36; para nunca aparecer barra invertida) -->
+            <!-- 4 Top Cards Metric -->
             <div class="grid grid-cols-4 gap-4">
                 <div class="bg-[#5c46e5] p-4 rounded-2xl flex justify-between items-center shadow-lg">
                     <div>
@@ -118,7 +118,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-indigo-100 font-medium">Entradas (Mês)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R&#36; 48.250,00</p>
+                        <p class="text-2xl font-bold text-white">R$ 48.250,00</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -135,7 +135,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-cyan-100 font-medium">Saídas (OCR)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R&#36; 14.120,50</p>
+                        <p class="text-2xl font-bold text-white">R$ 14.120,50</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -152,7 +152,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-purple-100 font-medium">Caixa Líquido</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R&#36; 34.129,50</p>
+                        <p class="text-2xl font-bold text-white">R$ 34.129,50</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -216,8 +216,560 @@
                     </div>
                 </div>
 
-                <!-- Sales Analytics Chart (Exatamente original da tua base) -->
+                <!-- Sales Analytics Chart (Exatamente original do index 9) -->
                 <div class="col-span-7 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
                     <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-semibold text-white text-sm">Fluxo: Entradas vs Saídas</h3>
-                        <div class="flex bg
+                        <h3 class="font-semibold text-white text-sm">Sales Analytics</h3>
+                        <div class="flex bg-[#1f164b] p-1 rounded-lg text-[10px] space-x-1">
+                            <button class="px-2 py-1 text-slate-400 hover:text-white transition">Today</button>
+                            <button class="px-2 py-1 text-slate-400 hover:text-white transition">Weekly</button>
+                            <button class="px-2 py-1 bg-pink-600 text-white rounded font-medium shadow">Monthly</button>
+                        </div>
+                    </div>
+
+                    <div class="relative h-60 w-full" id="chartWrapper">
+                        <canvas id="salesAnalyticsChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bottom Section: Tabela de Transações -->
+            <div class="bg-[#171038] p-5 rounded-2xl border border-indigo-900/30">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold text-white text-sm">Documentos & Lançamentos Recentes</h3>
+                    <span class="text-[10px] text-emerald-400 font-mono">● Sincronizado via Google Sheets</span>
+                </div>
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="text-[10px] text-slate-500 border-b border-indigo-900/40">
+                        <tr>
+                            <th class="pb-2 font-medium">ID / Arquivo</th>
+                            <th class="pb-2 font-medium">Fornecedor / Origem</th>
+                            <th class="pb-2 font-medium">Valor</th>
+                            <th class="pb-2 font-medium">Status n8n</th>
+                            <th class="pb-2 font-medium text-right">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody" class="divide-y divide-indigo-900/20 text-[11px]">
+                        <tr class="hover:bg-indigo-900/30 transition">
+                            <td class="py-2.5 font-mono text-cyan-400">#DANFE_94821</td>
+                            <td class="py-2.5 font-medium text-white">Fornecedor XYZ Ltd</td>
+                            <td class="py-2.5 text-rose-400 font-semibold">- R$ 1.250,00</td>
+                            <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
+                            <td class="py-2.5 text-right text-slate-400">Hoje, 14:22</td>
+                        </tr>
+                        <tr class="hover:bg-indigo-900/30 transition">
+                            <td class="py-2.5 font-mono text-cyan-400">#REC_30291</td>
+                            <td class="py-2.5 font-medium text-white">Hostinger Cloud VPS</td>
+                            <td class="py-2.5 text-rose-400 font-semibold">- R$ 145,00</td>
+                            <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
+                            <td class="py-2.5 text-right text-slate-400">Ontem, 09:15</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- CONTAINER DAS BOLHAS FLUTUANTES (ISOLADO NO CANTO INFERIOR DIREITO) -->
+    <div id="bubblesContainer" class="fixed bottom-6 right-6 flex flex-col-reverse items-end space-y-reverse space-y-3 z-50 pointer-events-none">
+        
+        <!-- BOLHA MESTRA PRINCIPAL -->
+        <div id="masterBubble" 
+             class="pointer-events-auto w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group"
+             title="Arraste ou clique para alternar as bolhas">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span id="activeCountBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-cyan-400 rounded-full border-2 border-[#0b071e] text-[10px] font-bold text-slate-900 flex items-center justify-center">0</span>
+        </div>
+
+        <!-- BOLHA (+) PARA SELECIONAR MÚLTIPLOS DOCUMENTOS -->
+        <div id="plusBubbleWrapper" class="stack-item hidden pointer-events-auto flex flex-col items-end mb-2 bubble-enter">
+            <div onclick="document.getElementById('globalBatchInput').click()" 
+                 class="w-11 h-11 rounded-full bg-cyan-500 hover:bg-cyan-400 border-2 border-white shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group"
+                 title="Adicionar múltiplos documentos (OCR)">
+                <span class="text-white text-xl font-bold">+</span>
+            </div>
+        </div>
+
+        <!-- BOLHA DE SALVAR TUDO NO GOOGLE SHEETS (Acima da bolha +) -->
+        <div id="saveAllBubbleWrapper" class="stack-item hidden pointer-events-auto flex flex-col items-end mb-2 bubble-enter">
+            <div id="saveAllBubbleBtn" onclick="window.saveAllBubblesToSheets()" 
+                 class="w-11 h-11 rounded-full bg-emerald-500 hover:bg-emerald-400 border-2 border-white shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group"
+                 title="Salvar todas as bolhas abertas no Google Sheets">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const WEBHOOK_N8N_URL = "https://n8n.labzratz.tech/webhook/process-danfe"; 
+        const WEBHOOK_N8N_SAVE_URL = "https://n8n.labzratz.tech/webhook/save-sheets";
+        let bubbleCounter = 0;
+        let activeScannersCount = 0;
+        let isExpanded = false;
+        const bubbleState = {};
+
+        // --- SISTEMA DE ARRASTAR A BOLHA PRINCIPAL (DRAG & DROP) ---
+        const masterBubble = document.getElementById('masterBubble');
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
+
+        masterBubble.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        masterBubble.addEventListener('touchstart', dragStart);
+        document.addEventListener('touchmove', drag);
+        document.addEventListener('touchend', dragEnd);
+
+        function dragStart(e) {
+            isDragging = true;
+            startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            const rect = masterBubble.getBoundingClientRect();
+            initialX = window.innerWidth - rect.right;
+            initialY = window.innerHeight - rect.bottom;
+            masterBubble.style.transition = 'none';
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            
+            const dx = startX - clientX;
+            const dy = startY - clientY;
+
+            masterBubble.style.right = `${initialX + dx}px`;
+            masterBubble.style.bottom = `${initialY + dy}px`;
+        }
+
+        function dragEnd() {
+            isDragging = false;
+            masterBubble.style.transition = 'all 0.2s ease';
+        }
+
+        // Clique na bolha principal expande ou recolhe a pilha de bolhas
+        masterBubble.addEventListener('click', (e) => {
+            if (isDragging) return;
+            isExpanded = !isExpanded;
+            toggleStackVisibility(isExpanded);
+        });
+
+        function toggleStackVisibility(show) {
+            const stackItems = document.querySelectorAll('.stack-item');
+            stackItems.forEach(item => {
+                if (show) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        // --- PROCESSAMENTO DE MÚLTIPLOS FICHEIROS SELECIONADOS NA BOLHA (+) ---
+        window.handleBatchFiles = function(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            for (let i = 0; i < files.length; i++) {
+                createScannerBubbleFromFile(files[i]);
+            }
+
+            e.target.value = ''; // Limpa o input
+            isExpanded = true;
+            toggleStackVisibility(true);
+        };
+
+        function createScannerBubbleFromFile(file) {
+            bubbleCounter++;
+            activeScannersCount++;
+            updateBadge();
+            
+            const id = `scanner_${bubbleCounter}`;
+            const saveAllBubbleWrapper = document.getElementById('saveAllBubbleWrapper');
+            const defaultName = file.name.substring(0, 20);
+
+            bubbleState[id] = {
+                file: file,
+                hasError: false
+            };
+
+            const bubbleHTML = `
+                <div id="${id}_wrapper" class="stack-item pointer-events-auto flex flex-col items-end mb-2 bubble-enter">
+                    
+                    <div id="${id}_modal" class="w-80 bg-[#171038] border border-indigo-600/50 rounded-2xl shadow-2xl p-4 text-xs mb-2">
+                        <div class="flex justify-between items-center pb-2 border-b border-indigo-900/40 mb-2">
+                            <div class="flex items-center space-x-2">
+                                <span id="${id}_robotStatus" class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                                <span class="font-bold text-white truncate max-w-[160px]" title="${file.name}">Doc #${bubbleCounter}: ${defaultName}</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <button type="button" onclick="window.toggleBubble('${id}', true)" class="w-6 h-6 rounded hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white font-bold cursor-pointer" title="Minimizar">_</button>
+                                <button type="button" onclick="window.closeBubble('${id}')" class="w-6 h-6 rounded hover:bg-rose-500/20 flex items-center justify-center text-rose-400 font-bold cursor-pointer" title="Fechar">✕</button>
+                            </div>
+                        </div>
+
+                        <form id="${id}_form" onsubmit="window.handleFormSubmit(event, '${id}')" class="space-y-2.5">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-0.5">Arquivo Selecionado</label>
+                                <input type="text" readonly value="${file.name}" class="w-full bg-[#1e1545]/60 border border-indigo-950 rounded-lg px-2 py-1 text-[10px] text-cyan-300">
+                            </div>
+
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-0.5">Descrição / Fornecedor</label>
+                                <input type="text" id="${id}_desc" required value="${defaultName}" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-[10px] text-slate-400 block mb-0.5">Valor (R$)</label>
+                                    <input type="text" id="${id}_amount" placeholder="0,00" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 block mb-0.5">Categoria</label>
+                                    <select id="${id}_category" onchange="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-1.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                        <option value="Despesa">Despesa</option>
+                                        <option value="Receita">Receita</option>
+                                        <option value="Servidor/Cloud">Servidor/Cloud</option>
+                                        <option value="Insumos">Insumos</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-0.5">Data</label>
+                                <input type="date" id="${id}_date" onchange="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                            </div>
+
+                            <button type="submit" id="${id}_submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-1.5 rounded-xl font-semibold shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer active:scale-95 text-xs">
+                                <span>Enviar Imagem para Leitura</span>
+                            </button>
+                        </form>
+
+                        <div id="${id}_status" class="hidden mt-3 p-2 bg-[#1e1545] rounded-lg text-[10px] text-slate-300"></div>
+                    </div>
+
+                    <div id="${id}_bubble" onclick="window.toggleBubble('${id}', false)" class="hidden w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative">
+                        <span class="text-xs font-bold text-white">#${bubbleCounter}</span>
+                        <span id="${id}_badge" class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-[#0b071e]"></span>
+                    </div>
+
+                </div>
+            `;
+
+            saveAllBubbleWrapper.insertAdjacentHTML('afterend', bubbleHTML);
+            document.getElementById(`${id}_date`).valueAsDate = new Date();
+            window[`${id}_actualFile`] = file;
+        }
+
+        window.toggleBubble = function(id, minimize) {
+            const modal = document.getElementById(`${id}_modal`);
+            const bubble = document.getElementById(`${id}_bubble`);
+            if (minimize) {
+                modal.classList.add('hidden');
+                bubble.classList.remove('hidden');
+            } else {
+                modal.classList.remove('hidden');
+                bubble.classList.add('hidden');
+            }
+        };
+
+        window.closeBubble = function(id) {
+            const wrapper = document.getElementById(`${id}_wrapper`);
+            if (wrapper) wrapper.remove();
+            delete bubbleState[id];
+            activeScannersCount = Math.max(0, activeScannersCount - 1);
+            updateBadge();
+        };
+
+        function updateBadge() {
+            const badgeEl = document.getElementById('activeCountBadge');
+            if (badgeEl) badgeEl.innerText = activeScannersCount;
+        }
+
+        function markBubbleRedError(id, errorMsg) {
+            if (bubbleState[id]) bubbleState[id].hasError = true;
+            const modal = document.getElementById(`${id}_modal`);
+            const bubble = document.getElementById(`${id}_bubble`);
+            const badge = document.getElementById(`${id}_badge`);
+            const robotStatus = document.getElementById(`${id}_robotStatus`);
+            const statusDiv = document.getElementById(`${id}_status`);
+
+            if (modal) {
+                modal.classList.remove('border-indigo-600/50');
+                modal.classList.add('border-rose-500');
+            }
+            if (bubble) {
+                const isHidden = bubble.classList.contains('hidden');
+                bubble.className = `${isHidden ? 'hidden ' : ''}w-11 h-11 rounded-full bg-gradient-to-br from-rose-600 to-red-700 border-2 border-rose-300 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative animate-pulse`;
+            }
+            if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-[#0b071e]";
+            if (robotStatus) robotStatus.className = "w-2 h-2 rounded-full bg-rose-500 animate-ping";
+            if (statusDiv) {
+                statusDiv.classList.remove('hidden');
+                statusDiv.innerHTML = `<span class="text-rose-400 font-semibold">🤖 Erro: ${errorMsg}</span>`;
+            }
+        }
+
+        window.clearBubbleError = function(id) {
+            if (!bubbleState[id] || !bubbleState[id].hasError) return;
+            bubbleState[id].hasError = false;
+            const modal = document.getElementById(`${id}_modal`);
+            const bubble = document.getElementById(`${id}_bubble`);
+            const badge = document.getElementById(`${id}_badge`);
+            const robotStatus = document.getElementById(`${id}_robotStatus`);
+
+            if (modal) {
+                modal.classList.remove('border-rose-500');
+                modal.classList.add('border-indigo-600/50');
+            }
+            if (bubble) {
+                const isHidden = bubble.classList.contains('hidden');
+                bubble.className = `${isHidden ? 'hidden ' : ''}w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative`;
+            }
+            if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-[#0b071e]";
+            if (robotStatus) robotStatus.className = "w-2 h-2 rounded-full bg-cyan-400";
+        };
+
+        // --- LEITURA DA IMAGEM NO N8N COM PREENCHIMENTO AUTOMÁTICO ISOLADO POR BOLHA ---
+        window.handleFormSubmit = async function(e, id) {
+            e.preventDefault();
+            window.clearBubbleError(id);
+
+            const descInput = document.getElementById(`${id}_desc`);
+            const amountInput = document.getElementById(`${id}_amount`);
+            const categoryInput = document.getElementById(`${id}_category`);
+            const dateInput = document.getElementById(`${id}_date`);
+            const submitBtn = document.getElementById(`${id}_submitBtn`);
+            const statusDiv = document.getElementById(`${id}_status`);
+            const robotStatus = document.getElementById(`${id}_robotStatus`);
+            const badge = document.getElementById(`${id}_badge`);
+
+            const file = window[`${id}_actualFile`];
+            if (!file) return;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span>🤖 Lendo documento...</span>`;
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerHTML = `<span class="text-cyan-400 animate-pulse">🤖 Estou lendo seu documento...</span>`;
+            if(robotStatus) robotStatus.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
+            if(badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-[#0b071e] animate-ping";
+
+            const formData = new FormData();
+            formData.append('instanceId', id);
+            formData.append('file', file);
+            formData.append('description', descInput.value);
+
+            try {
+                const response = await fetch(WEBHOOK_N8N_URL, { method: 'POST', body: formData });
+                if (!response.ok) {
+                    throw new Error(`Falha no Webhook n8n (Status ${response.status})`);
+                }
+
+                const rawResult = await response.json();
+                const result = Array.isArray(rawResult) ? rawResult[0] : (rawResult.data || rawResult);
+
+                if (!result || result.error) {
+                    throw new Error(result?.error || "Não foi possível ler os dados do documento.");
+                }
+
+                // Preenche os campos específicos desta bolha (id) sem misturar com outras bolhas
+                const vendorVal = result.vendor || result.description || result.fornecedor || result.nome;
+                const amountVal = result.amount || result.valor || result.total;
+                const categoryVal = result.category || result.categoria;
+                const dateVal = result.date || result.data;
+
+                if (vendorVal) descInput.value = vendorVal;
+                if (amountVal !== undefined && amountVal !== null) {
+                    amountInput.value = String(amountVal).replace('R$', '').trim();
+                }
+                if (categoryVal) {
+                    const opts = Array.from(categoryInput.options).map(o => o.value);
+                    if (opts.includes(categoryVal)) categoryInput.value = categoryVal;
+                }
+                if (dateVal && /^\d{4}-\d{2}-\d{2}/.test(dateVal)) {
+                    dateInput.value = dateVal.substring(0, 10);
+                }
+
+                statusDiv.innerHTML = `<span class="text-emerald-400 font-semibold">🤖 Documento lido e preenchido! Clique na bolha Salvar acima do (+).</span>`;
+                if(robotStatus) robotStatus.className = "w-2 h-2 rounded-full bg-emerald-400";
+                if(badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
+            } catch (err) {
+                markBubbleRedError(id, err.message || "Falha ao ler o documento no n8n.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<span>Enviar Imagem para Leitura</span>`;
+            }
+        };
+
+        // --- BOLHA DE SALVAR TUDO NO GOOGLE SHEETS (ABORTA E FICA VERMELHO SE HOUVER QUALQUER ERRO) ---
+        window.saveAllBubblesToSheets = async function() {
+            const ids = Object.keys(bubbleState);
+            if (ids.length === 0) return;
+
+            let hasAnyError = false;
+            const batchItems = [];
+
+            for (const id of ids) {
+                const descInput = document.getElementById(`${id}_desc`);
+                const amountInput = document.getElementById(`${id}_amount`);
+                const categoryInput = document.getElementById(`${id}_category`);
+                const dateInput = document.getElementById(`${id}_date`);
+
+                const desc = descInput ? descInput.value.trim() : "";
+                const amount = amountInput ? amountInput.value.trim() : "";
+                const category = categoryInput ? categoryInput.value : "Despesa";
+                const date = dateInput ? dateInput.value : "";
+
+                if (bubbleState[id].hasError) {
+                    hasAnyError = true;
+                    continue;
+                }
+                if (!desc) {
+                    markBubbleRedError(id, "O campo Descrição / Fornecedor está vazio.");
+                    hasAnyError = true;
+                    continue;
+                }
+                if (!amount || amount === "0,00" || amount === "0") {
+                    markBubbleRedError(id, "O Valor (R$) está vazio ou inválido.");
+                    hasAnyError = true;
+                    continue;
+                }
+                if (!date) {
+                    markBubbleRedError(id, "A Data está vazia.");
+                    hasAnyError = true;
+                    continue;
+                }
+
+                batchItems.push({
+                    instanceId: id,
+                    description: desc,
+                    amount: amount,
+                    category: category,
+                    date: date
+                });
+            }
+
+            // Em caso de qualquer erro, não envia nada
+            if (hasAnyError) return;
+
+            try {
+                const response = await fetch(WEBHOOK_N8N_SAVE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: batchItems })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro ao salvar no Google Sheets (Status ${response.status}). Nada foi enviado.`);
+                }
+
+                const resData = await response.json().catch(() => ({}));
+                if (resData && resData.error) {
+                    throw new Error(resData.error);
+                }
+
+                batchItems.forEach(item => {
+                    addTransactionToTable(
+                        `#DANFE_${Math.floor(Math.random()*90000+10000)}`,
+                        item.description,
+                        `R$ ${item.amount}`,
+                        "Processado"
+                    );
+                    window.closeBubble(item.instanceId);
+                });
+            } catch (err) {
+                ids.forEach(id => {
+                    markBubbleRedError(id, err.message || "Falha de conexão com o n8n ao tentar salvar no Google Sheets.");
+                });
+            }
+        };
+
+        function addTransactionToTable(id, vendor, amount, status) {
+            const tbody = document.getElementById('transactionTableBody');
+            const row = `
+                <tr class="bg-indigo-900/30 transition">
+                    <td class="py-2.5 font-mono text-cyan-400">${id}</td>
+                    <td class="py-2.5 font-medium text-white">${vendor}</td>
+                    <td class="py-2.5 text-rose-400 font-semibold">- ${amount}</td>
+                    <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">${status}</span></td>
+                    <td class="py-2.5 text-right text-slate-400">Agora</td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('afterbegin', row);
+        }
+
+        function filterTable() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#transactionTableBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+
+        // --- CHART.JS ORIGINAL DO INDEX 9 (Apenas com as 2 colunas lado a lado: Entrada e Saída) ---
+        function renderChart() {
+            try {
+                if (typeof Chart !== 'undefined') {
+                    const canvas = document.getElementById('salesAnalyticsChart');
+                    if (!canvas) return;
+                    const ctx = canvas.getContext('2d');
+                    
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['01 JAN', '01 FEB', '01 MAR', '01 ARP', '01 MAY', '01 JUN', '01 JUL', '01 AUG', '01 SEP', '01 OCT'],
+                            datasets: [
+                                {
+                                    type: 'bar',
+                                    label: 'Entradas',
+                                    data: [400, 680, 500, 800, 200, 350, 150, 360, 820, 500],
+                                    backgroundColor: '#00f2fe',
+                                    borderRadius: 4,
+                                    barThickness: 10,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    type: 'bar',
+                                    label: 'Saídas',
+                                    data: [230, 420, 350, 270, 430, 220, 170, 310, 220, 160],
+                                    backgroundColor: '#a82ce0',
+                                    borderRadius: 4,
+                                    barThickness: 10,
+                                    yAxisID: 'y'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 9 } } },
+                                y: { type: 'linear', position: 'left', min: 0, max: 800, ticks: { stepSize: 200, color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(99, 102, 241, 0.1)' } },
+                                y1: { type: 'linear', position: 'right', min: 0, max: 80, ticks: { stepSize: 20, color: '#64748b', font: { size: 9 } }, grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn("Chart.js não pôde ser carregado:", err);
+            }
+        }
+
+        if (document.readyState === 'complete') {
+            renderChart();
+        } else {
+            window.addEventListener('load', renderChart);
+        }
+    </script>
+</body>
+</html>
