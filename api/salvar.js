@@ -35,7 +35,7 @@ export default async function handler(req, res) {
         console.error("Erro de comunicação entre Vercel e n8n:", error);
         return res.status(500).json({ 
             success: false, 
-            message: 'Falha de comunicação com o servidor. Tente novamente mais tarde.' 
+            message: 'Falha de comunicação com o servidor. por favor, comunique o suporte.' 
         });
     }
 }
