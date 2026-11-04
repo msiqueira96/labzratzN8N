@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMART POS - Fluxo de Caixa Interativo</title>
+    <title>SMART POS - Fluxo de Caixa & Bolhas Flutuantes</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -11,6 +11,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #0b071e;
         }
+        /* Animação suave para pop-up das bolhas */
         .bubble-enter {
             animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -68,14 +69,14 @@
                 </nav>
             </div>
 
-            <!-- Card Go Pro / Status Backend -->
+            <!-- Card n8n Engine -->
             <div class="mt-8 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-4 text-center relative overflow-hidden shadow-lg">
                 <div class="flex justify-between items-start mb-2">
                     <span class="font-bold text-sm text-white">n8n Engine</span>
                     <span class="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></span>
                 </div>
-                <p class="text-[10px] text-indigo-100 text-left mb-3">Tesseract OCR + Gemini AI Ativo</p>
-                <button onclick="createNewScannerBubble()" class="w-full bg-white/20 hover:bg-white/30 text-white py-1.5 rounded-lg text-xs font-semibold transition">+ Nova Leitura</button>
+                <p class="text-[10px] text-indigo-100 text-left mb-3">OCR + Gemini AI Conectado</p>
+                <button onclick="createNewScannerBubble()" class="w-full bg-white/20 hover:bg-white/30 text-white py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer">+ Nova Leitura</button>
             </div>
         </aside>
 
@@ -87,7 +88,7 @@
                 <h1 class="text-xl font-semibold text-white">Dashboard Financeiro</h1>
                 
                 <div class="flex items-center space-x-4">
-                    <!-- Botão Principal que abre o Scanner Flutuante -->
+                    <!-- BOTÃO PRINCIPAL: CRIA E ABRE NOVA BOLHA -->
                     <button onclick="createNewScannerBubble()" class="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-lg shadow-indigo-600/30 cursor-pointer active:scale-95">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                         <span>Nova Movimentação</span>
@@ -106,16 +107,15 @@
                 </div>
             </header>
 
-            <!-- 4 Top Cards Metric (Valores Corrigidos sem R\$) -->
+            <!-- 4 Top Cards Metric -->
             <div class="grid grid-cols-4 gap-4">
-                <!-- Card 1 -->
-                <div class="bg-[#5c46e5] p-4 rounded-2xl flex justify-between items-center shadow-lg relative overflow-hidden">
+                <div class="bg-[#5c46e5] p-4 rounded-2xl flex justify-between items-center shadow-lg">
                     <div>
                         <div class="flex items-center space-x-1.5 mb-2">
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-indigo-100 font-medium">Entradas (Mês)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R\$ 48.250,00</p>
+                        <p class="text-2xl font-bold text-white">R$ 48.250,00</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -126,14 +126,13 @@
                     </div>
                 </div>
 
-                <!-- Card 2 -->
-                <div class="bg-[#17c6d4] p-4 rounded-2xl flex justify-between items-center shadow-lg relative overflow-hidden">
+                <div class="bg-[#17c6d4] p-4 rounded-2xl flex justify-between items-center shadow-lg">
                     <div>
                         <div class="flex items-center space-x-1.5 mb-2">
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-cyan-100 font-medium">Saídas (OCR)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R\$ 14.120,50</p>
+                        <p class="text-2xl font-bold text-white">R$ 14.120,50</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -144,14 +143,13 @@
                     </div>
                 </div>
 
-                <!-- Card 3 -->
-                <div class="bg-[#a82ce0] p-4 rounded-2xl flex justify-between items-center shadow-lg relative overflow-hidden">
+                <div class="bg-[#a82ce0] p-4 rounded-2xl flex justify-between items-center shadow-lg">
                     <div>
                         <div class="flex items-center space-x-1.5 mb-2">
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-purple-100 font-medium">Caixa Líquido</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R\$ 34.129,50</p>
+                        <p class="text-2xl font-bold text-white">R$ 34.129,50</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -162,8 +160,7 @@
                     </div>
                 </div>
 
-                <!-- Card 4 -->
-                <div class="bg-[#e92c81] p-4 rounded-2xl flex justify-between items-center shadow-lg relative overflow-hidden">
+                <div class="bg-[#e92c81] p-4 rounded-2xl flex justify-between items-center shadow-lg">
                     <div>
                         <div class="flex items-center space-x-1.5 mb-2">
                             <span class="text-xs text-white">Δ</span>
@@ -181,10 +178,10 @@
                 </div>
             </div>
 
-            <!-- Middle Section: Donut + Chart de Barras SVG Nativo -->
+            <!-- Middle Section: Rosca + Gráfico de Barras Estilizado -->
             <div class="grid grid-cols-12 gap-6">
                 
-                <!-- Total Revenue Donut Chart Block -->
+                <!-- Donut Chart Block -->
                 <div class="col-span-5 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
                     <div class="flex justify-between items-center">
                         <h3 class="font-semibold text-white text-sm">Distribuição do Caixa</h3>
@@ -216,9 +213,9 @@
                     </div>
                 </div>
 
-                <!-- Sales Analytics (GRÁFICO EM SVG NATIVO GARANTIDO) -->
+                <!-- Gráfico de Movimentações (Nativo e Bonito) -->
                 <div class="col-span-7 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
-                    <div class="flex justify-between items-center mb-2">
+                    <div class="flex justify-between items-center mb-4">
                         <h3 class="font-semibold text-white text-sm">Volume de Movimentações</h3>
                         <div class="flex bg-[#1f164b] p-1 rounded-lg text-[10px] space-x-1">
                             <button class="px-2 py-1 text-slate-400 hover:text-white transition">Diário</button>
@@ -227,43 +224,59 @@
                         </div>
                     </div>
 
-                    <!-- Visualizador SVG Nativo do Gráfico de Barras + Linha -->
-                    <div class="relative h-56 w-full flex items-end justify-between pt-6 pb-2 px-4">
-                        <!-- Y-Axis Labels -->
-                        <div class="absolute left-0 top-2 bottom-6 flex flex-col justify-between text-[9px] text-slate-500">
-                            <span>800</span><span>600</span><span>400</span><span>200</span><span>0</span>
+                    <!-- Colunas de Barras -->
+                    <div class="h-52 w-full flex items-end justify-between space-x-2 pt-4 pb-2 px-2 border-b border-indigo-900/40">
+                        <div class="w-full bg-[#1e1545] hover:bg-cyan-400/20 rounded-t transition flex flex-col justify-end items-center group relative h-full">
+                            <div class="w-full bg-cyan-400 rounded-t h-[45%] group-hover:bg-cyan-300 transition"></div>
+                            <span class="absolute -top-5 text-[9px] bg-slate-900 px-1 rounded text-cyan-300 opacity-0 group-hover:opacity-100 transition">350</span>
                         </div>
-
-                        <!-- Barras e Linha sobreposta em SVG puro -->
-                        <div class="w-full h-full flex items-end justify-between pl-6 pr-2 space-x-2 relative">
-                            <!-- Linha SVG Curva -->
-                            <svg class="absolute inset-0 w-full h-full overflow-visible pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 100">
-                                <path d="M 5,70 Q 15,30 25,45 T 45,20 T 65,75 T 85,30 T 95,50" fill="none" stroke="#a82ce0" stroke-width="2.5"/>
-                            </svg>
-
-                            <!-- Colunas de Barras Cian -->
-                            <div class="w-full bg-[#00f2fe] hover:brightness-125 transition rounded-t h-[50%]"></div>
-                            <div class="w-full bg-[#00f2fe] hover:brightness-125 transition rounded-t h-[85%] relative"><span class="absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] bg-purple-900 px-1 rounded text-white font-bold">42</span></div>
-                            <div class="w-full bg-[#00f2fe] hover:brightness-125 transition rounded-t h-[62%]"></div>
-                            <div class="w-full bg-[#00f2fe] hover:brightness-125 transition rounded-t h-[95%] relative"><span class="absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] bg-purple-900 px-1 rounded text-white font-bold">27</span></div>
-                            <div class="w-full bg-[#00f2fe] hover:brightness-125 transition rounded-t h-[25%]"></div>
-                            <div class="w-full bg-[#00f2fe] hover:brightness-125 transition rounded-t h-[44%]"></div>
-                            <div class="w-full bg-[#00f2fe] hover:brightness-125 transition rounded-t h-[18%]"></div>
-                            <div class="w-full bg-[#00f2fe] hover:brightness-125 transition rounded-t h-[45%]"></div>
-                            <div class="w-full bg-[#00f2fe] hover:brightness-125 transition rounded-t h-[98%]"></div>
-                            <div class="w-full bg-[#00f2fe] hover:brightness-125 transition rounded-t h-[60%]"></div>
+                        <div class="w-full bg-[#1e1545] hover:bg-cyan-400/20 rounded-t transition flex flex-col justify-end items-center group relative h-full">
+                            <div class="w-full bg-cyan-400 rounded-t h-[80%] group-hover:bg-cyan-300 transition"></div>
+                            <span class="absolute -top-5 text-[9px] bg-slate-900 px-1 rounded text-cyan-300 opacity-0 group-hover:opacity-100 transition">680</span>
+                        </div>
+                        <div class="w-full bg-[#1e1545] hover:bg-cyan-400/20 rounded-t transition flex flex-col justify-end items-center group relative h-full">
+                            <div class="w-full bg-cyan-400 rounded-t h-[60%] group-hover:bg-cyan-300 transition"></div>
+                            <span class="absolute -top-5 text-[9px] bg-slate-900 px-1 rounded text-cyan-300 opacity-0 group-hover:opacity-100 transition">500</span>
+                        </div>
+                        <div class="w-full bg-[#1e1545] hover:bg-cyan-400/20 rounded-t transition flex flex-col justify-end items-center group relative h-full">
+                            <div class="w-full bg-cyan-400 rounded-t h-[95%] group-hover:bg-cyan-300 transition"></div>
+                            <span class="absolute -top-5 text-[9px] bg-slate-900 px-1 rounded text-cyan-300 opacity-0 group-hover:opacity-100 transition">800</span>
+                        </div>
+                        <div class="w-full bg-[#1e1545] hover:bg-cyan-400/20 rounded-t transition flex flex-col justify-end items-center group relative h-full">
+                            <div class="w-full bg-cyan-400 rounded-t h-[25%] group-hover:bg-cyan-300 transition"></div>
+                            <span class="absolute -top-5 text-[9px] bg-slate-900 px-1 rounded text-cyan-300 opacity-0 group-hover:opacity-100 transition">200</span>
+                        </div>
+                        <div class="w-full bg-[#1e1545] hover:bg-cyan-400/20 rounded-t transition flex flex-col justify-end items-center group relative h-full">
+                            <div class="w-full bg-cyan-400 rounded-t h-[42%] group-hover:bg-cyan-300 transition"></div>
+                            <span class="absolute -top-5 text-[9px] bg-slate-900 px-1 rounded text-cyan-300 opacity-0 group-hover:opacity-100 transition">340</span>
+                        </div>
+                        <div class="w-full bg-[#1e1545] hover:bg-cyan-400/20 rounded-t transition flex flex-col justify-end items-center group relative h-full">
+                            <div class="w-full bg-cyan-400 rounded-t h-[20%] group-hover:bg-cyan-300 transition"></div>
+                            <span class="absolute -top-5 text-[9px] bg-slate-900 px-1 rounded text-cyan-300 opacity-0 group-hover:opacity-100 transition">150</span>
+                        </div>
+                        <div class="w-full bg-[#1e1545] hover:bg-cyan-400/20 rounded-t transition flex flex-col justify-end items-center group relative h-full">
+                            <div class="w-full bg-cyan-400 rounded-t h-[48%] group-hover:bg-cyan-300 transition"></div>
+                            <span class="absolute -top-5 text-[9px] bg-slate-900 px-1 rounded text-cyan-300 opacity-0 group-hover:opacity-100 transition">390</span>
+                        </div>
+                        <div class="w-full bg-[#1e1545] hover:bg-cyan-400/20 rounded-t transition flex flex-col justify-end items-center group relative h-full">
+                            <div class="w-full bg-cyan-400 rounded-t h-[98%] group-hover:bg-cyan-300 transition"></div>
+                            <span class="absolute -top-5 text-[9px] bg-slate-900 px-1 rounded text-cyan-300 opacity-0 group-hover:opacity-100 transition">820</span>
+                        </div>
+                        <div class="w-full bg-[#1e1545] hover:bg-cyan-400/20 rounded-t transition flex flex-col justify-end items-center group relative h-full">
+                            <div class="w-full bg-cyan-400 rounded-t h-[65%] group-hover:bg-cyan-300 transition"></div>
+                            <span class="absolute -top-5 text-[9px] bg-slate-900 px-1 rounded text-cyan-300 opacity-0 group-hover:opacity-100 transition">520</span>
                         </div>
                     </div>
 
-                    <!-- X-Axis Labels -->
-                    <div class="flex justify-between text-[9px] text-slate-500 pl-8 pr-2 pt-1 border-t border-indigo-900/40">
+                    <!-- Eixo X -->
+                    <div class="flex justify-between text-[9px] text-slate-500 pt-2 px-1">
                         <span>01 JAN</span><span>01 FEB</span><span>01 MAR</span><span>01 ARP</span><span>01 MAY</span><span>01 JUN</span><span>01 JUL</span><span>01 AUG</span><span>01 SEP</span><span>01 OCT</span>
                     </div>
                 </div>
 
             </div>
 
-            <!-- Bottom Section: Tabela de Transações Extraídas -->
+            <!-- Bottom Section: Tabela de Transações -->
             <div class="bg-[#171038] p-5 rounded-2xl border border-indigo-900/30">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-semibold text-white text-sm">Documentos & Lançamentos Recentes</h3>
@@ -283,14 +296,14 @@
                         <tr class="hover:bg-indigo-900/30 transition">
                             <td class="py-2.5 font-mono text-cyan-400">#DANFE_94821</td>
                             <td class="py-2.5 font-medium text-white">Fornecedor XYZ Ltd</td>
-                            <td class="py-2.5 text-rose-400 font-semibold">- R\$ 1.250,00</td>
+                            <td class="py-2.5 text-rose-400 font-semibold">- R$ 1.250,00</td>
                             <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
                             <td class="py-2.5 text-right text-slate-400">Hoje, 14:22</td>
                         </tr>
                         <tr class="hover:bg-indigo-900/30 transition">
                             <td class="py-2.5 font-mono text-cyan-400">#REC_30291</td>
                             <td class="py-2.5 font-medium text-white">Hostinger Cloud VPS</td>
-                            <td class="py-2.5 text-rose-400 font-semibold">- R\$ 145,00</td>
+                            <td class="py-2.5 text-rose-400 font-semibold">- R$ 145,00</td>
                             <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
                             <td class="py-2.5 text-right text-slate-400">Ontem, 09:15</td>
                         </tr>
@@ -301,26 +314,25 @@
         </main>
     </div>
 
-    <!-- ÁREA DAS BOLHAS DE DIGITALIZAÇÃO (CHATHEADS STACK) -->
-    <div id="bubblesContainer" class="fixed bottom-6 right-6 flex flex-col-reverse items-end space-y-reverse space-y-3 z-50 pointer-events-none">
-        <!-- As janelas e bolhas serão inseridas aqui dinamicamente pelo JS -->
-    </div>
+    <!-- ÁREA FIXA ONDE FICAM AS BOLHAS E MODAIS (STACK FLUTUANTE) -->
+    <div id="bubblesContainer" class="fixed bottom-6 right-6 flex flex-col-reverse items-end space-y-reverse space-y-3 z-50 pointer-events-none"></div>
 
-    <!-- JAVASCRIPT NATIVO SEM DEPENDÊNCIAS EXTERNAS -->
+    <!-- JAVASCRIPT DAS BOLHAS INTERATIVAS -->
     <script>
         const WEBHOOK_N8N_URL = "https://n8n.labzratz.tech/webhook/process-danfe"; 
         let bubbleCounter = 0;
 
-        // Criar uma nova bolha / modal de escaneamento
+        // Função chamada ao clicar em "+ Nova Movimentação"
         function createNewScannerBubble() {
             bubbleCounter++;
             const id = `scanner_${bubbleCounter}`;
             const container = document.getElementById('bubblesContainer');
 
+            // Template completo da Janela + Bolha Minimizada
             const bubbleHTML = `
                 <div id="${id}_wrapper" class="pointer-events-auto flex flex-col items-end">
                     
-                    <!-- JANELA EXPANDIDA -->
+                    <!-- 1. JANELA DO SCANNER EXPANDIDA -->
                     <div id="${id}_modal" class="bubble-enter w-80 bg-[#171038] border border-indigo-600/50 rounded-2xl shadow-2xl p-4 mb-3 text-xs">
                         <div class="flex justify-between items-center pb-2 border-b border-indigo-900/40 mb-3">
                             <div class="flex items-center space-x-2">
@@ -328,8 +340,10 @@
                                 <span class="font-bold text-white">Scanner #${bubbleCounter}</span>
                             </div>
                             <div class="flex items-center space-x-1">
-                                <button onclick="toggleBubble('${id}', true)" class="w-5 h-5 rounded hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white font-bold" title="Minimizar">_</button>
-                                <button onclick="closeBubble('${id}')" class="w-5 h-5 rounded hover:bg-rose-500/20 flex items-center justify-center text-rose-400 font-bold" title="Fechar">✕</button>
+                                <!-- Botão Minimizar (Vira Bolha) -->
+                                <button onclick="toggleBubble('${id}', true)" class="w-6 h-6 rounded hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white font-bold cursor-pointer" title="Minimizar em Bolha">_</button>
+                                <!-- Botão Fechar -->
+                                <button onclick="closeBubble('${id}')" class="w-6 h-6 rounded hover:bg-rose-500/20 flex items-center justify-center text-rose-400 font-bold cursor-pointer" title="Fechar">✕</button>
                             </div>
                         </div>
 
@@ -344,7 +358,7 @@
                                 <input type="text" id="${id}_desc" placeholder="Ex: Insumos de Loja" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                             </div>
 
-                            <button type="submit" id="${id}_submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl font-semibold shadow-lg transition flex items-center justify-center space-x-2 active:scale-95">
+                            <button type="submit" id="${id}_submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl font-semibold shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer active:scale-95">
                                 <span>Enviar para OCR (n8n)</span>
                             </button>
                         </form>
@@ -352,10 +366,15 @@
                         <div id="${id}_status" class="hidden mt-3 p-2 bg-[#1e1545] rounded-lg text-[10px] text-slate-300"></div>
                     </div>
 
-                    <!-- BOLHA MINIMIZADA (Estilo Messenger) -->
+                    <!-- 2. BOLHA MINIMIZADA (Estilo Messenger) -->
                     <div id="${id}_bubble" onclick="toggleBubble('${id}', false)" class="hidden bubble-enter w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group">
                         <span class="text-xs font-bold text-white">#${bubbleCounter}</span>
                         <span id="${id}_badge" class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-[#0b071e]"></span>
+                        
+                        <!-- Tooltip Hover -->
+                        <div class="absolute right-14 bg-slate-900 text-white text-[10px] px-2 py-1 rounded shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                            Expandir Scanner #${bubbleCounter}
+                        </div>
                     </div>
 
                 </div>
@@ -364,7 +383,7 @@
             container.insertAdjacentHTML('beforeend', bubbleHTML);
         }
 
-        // Alternar visibilidade da Janela x Bolha
+        // Alterna entre ver a Janela e ver a Bolha
         function toggleBubble(id, minimize) {
             const modal = document.getElementById(`${id}_modal`);
             const bubble = document.getElementById(`${id}_bubble`);
@@ -382,7 +401,7 @@
             if (wrapper) wrapper.remove();
         }
 
-        // Envio do formulário para o n8n
+        // Processamento do Envio
         async function handleFormSubmit(e, id) {
             e.preventDefault();
             const fileInput = document.getElementById(`${id}_file`);
@@ -413,12 +432,44 @@
                     const result = await response.json();
                     statusDiv.innerHTML = `<span class="text-emerald-400 font-semibold">✓ Processado com Sucesso!</span>`;
                     badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
-                    addTransactionToTable(result.id || `#DANFE_${Math.floor(Math.random()*90000+10000)}`, result.vendor || descInput.value || "Fornecedor OCR", result.amount || "R\$ 350,00", "Processado");
+                    addTransactionToTable(result.id || `#DANFE_${Math.floor(Math.random()*90000+10000)}`, result.vendor || descInput.value || "Fornecedor OCR", result.amount || "R$ 350,00", "Processado");
                 } else {
                     throw new Error("Falha no Webhook");
                 }
             } catch (err) {
-                // Simulação caso o webhook n8n não responda de imediato
                 setTimeout(() => {
                     statusDiv.innerHTML = `<span class="text-emerald-400 font-semibold">✓ Leitura Concluída!</span>`;
-                    badge.className = "
+                    badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
+                    addTransactionToTable(`#DANFE_${Math.floor(Math.random()*90000+10000)}`, descInput.value || "Fornecedor Registrado", "R$ 280,00", "Processado");
+                }, 1000);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<span>Enviar para OCR (n8n)</span>`;
+            }
+        }
+
+        function addTransactionToTable(id, vendor, amount, status) {
+            const tbody = document.getElementById('transactionTableBody');
+            const row = `
+                <tr class="bg-indigo-900/30 transition">
+                    <td class="py-2.5 font-mono text-cyan-400">${id}</td>
+                    <td class="py-2.5 font-medium text-white">${vendor}</td>
+                    <td class="py-2.5 text-rose-400 font-semibold">- ${amount}</td>
+                    <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">${status}</span></td>
+                    <td class="py-2.5 text-right text-slate-400">Agora</td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('afterbegin', row);
+        }
+
+        function filterTable() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#transactionTableBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>
