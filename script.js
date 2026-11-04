@@ -1,61 +1,30 @@
-// Submissão do Formulário de Movimentação
-    document.getElementById('formMovimentacao')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const btnSalvar = document.getElementById('btnSalvarRegistro');
-        const aiStatus = document.getElementById('aiUploadStatus');
-        const payload = obterDadosFormulario();
+export default async function handler(req, res) {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ message: 'Método não permitido. Use POST.' });
+    }
 
-        try {
-            if (btnSalvar) {
-                btnSalvar.disabled = true;
-                btnSalvar.innerText = 'Verificando e Salvando...';
-            }
+    const N8N_WEBHOOK_URL = 'https://n8n.labzratz.tech/webhook/salvar-movimentacao';
 
-            if (aiStatus) {
-                aiStatus.style.color = '#2563eb';
-                aiStatus.innerText = '⏳ Verificando duplicidade e processando...';
-            }
+    try {
+        const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(req.body)
+        });
 
-            const res = await fetch(CONFIG.URL_SALVAR, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const resposta = await res.json();
-
-            // Se houver erro de requisição ou duplicidade retornada pelo n8n
-            if (!res.ok || resposta.success === false) {
-                throw new Error(resposta.message || resposta.mensagem || 'Documento já cadastrado ou falha ao salvar.');
-            }
-
-            // Sucesso: exibe a mensagem positiva no robozinho
-            if (aiStatus) {
-                aiStatus.style.color = '#10b981';
-                aiStatus.innerText = '✅ ' + (resposta.message || resposta.mensagem || 'Movimentação gravada com sucesso!');
-            }
-
-            // Aguarda 1.5 segundos para o utilizador ler o feedback e fecha o modal com estilo
-            setTimeout(() => {
-                document.getElementById('formMovimentacao').reset();
-                if (aiStatus) aiStatus.innerText = '';
-                UI.closeModal('modalMovimentacao');
-                carregarDados();
-            }, 1500);
-
-        } catch (err) {
-            // Erro / Duplicidade: exibe o aviso em vermelho diretamente no robozinho
-            if (aiStatus) {
-                aiStatus.style.color = '#f43f5e';
-                aiStatus.innerText = '⚠️ ' + err.message;
-            }
-        } finally {
-            if (btnSalvar) {
-                btnSalvar.disabled = false;
-                btnSalvar.innerText = 'Salvar Registro';
-            }
+        const contentType = n8nResponse.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            const textError = await n8nResponse.text();
+            return res.status(n8nResponse.status).json({ success: false, message: 'O servidor n8n falhou ou não retornou o formato correto.' });
         }
-    });
+
+        const data = await n8nResponse.json();
+        return res.status(n8nResponse.status).json(data);
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Falha de comunicação com o servidor n8n.' });
+    }
+}
