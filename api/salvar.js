@@ -1,10 +1,8 @@
 export default async function handler(req, res) {
-    // Permite apenas requisições POST
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Método não permitido. Use POST.' });
     }
 
-    // 🔴 COLE AQUI A URL DO SEU WEBHOOK DE SALVAR (Fluxo de baixo do n8n)
     const N8N_WEBHOOK_URL = 'https://n8n.labzratz.tech/webhook/salvar-movimentacao';
 
     try {
@@ -14,20 +12,17 @@ export default async function handler(req, res) {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify(req.body) // Repassa os dados do formulário exatamente como vieram
+            body: JSON.stringify(req.body)
         });
 
-        // Se o n8n não devolver JSON (ex: erro 500 do n8n), tratamos isso para não rebentar o frontend
         const contentType = n8nResponse.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
             const textError = await n8nResponse.text();
-            console.error("Erro no n8n (não devolveu JSON):", textError);
+            console.error("Erro no n8n:", textError);
             return res.status(n8nResponse.status).json({ success: false, message: 'O servidor n8n falhou ou não retornou o formato correto.' });
         }
 
         const data = await n8nResponse.json();
-        
-        // Repassa a resposta do n8n para o seu script.js
         return res.status(n8nResponse.status).json(data);
 
     } catch (error) {
