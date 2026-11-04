@@ -279,7 +279,7 @@
                 <span class="text-xl">🤖</span>
                 <div>
                     <h2 class="text-sm font-bold text-white">Central de Documentos OCR (Visão em Grade)</h2>
-                    <p class="text-[11px] text-slate-400">As imagens são lidas automaticamente ao abrir. Confira os dados e salve individualmente ou no botão Salvar Tudo.</p>
+                    <p class="text-[11px] text-slate-400">As imagens são enviadas automaticamente via Serverless (update.js) ao abrir e salvas via (salvar.js).</p>
                 </div>
             </div>
             <button type="button" onclick="window.minimizeAllToDashboard()" class="bg-indigo-600/40 hover:bg-indigo-600 border border-indigo-400/40 text-white px-4 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer">
@@ -327,12 +327,24 @@
     </div>
 
     <script>
-        const WEBHOOK_N8N_URL = "https://n8n.labzratz.tech/webhook-test/upload-document"; 
-        const WEBHOOK_N8N_SAVE_URL = "https://n8n.labzratz.tech/webhook-test/salvar-movimentacao";
+        // Rotas Serverless da Vercel (update.js para leitura OCR no n8n e salvar.js para salvar no Google Sheets)
+        const API_OCR_UPDATE_URL = "/api/update"; 
+        const API_SHEETS_SALVAR_URL = "/api/salvar";
+
         let bubbleCounter = 0;
         let activeScannersCount = 0;
         let isExpanded = false;
         const bubbleState = {};
+
+        // Converte o ficheiro para Base64 para envio limpo via Serverless (update.js) sem erro de multipart/CORS
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = err => reject(err);
+                reader.readAsDataURL(file);
+            });
+        }
 
         // --- SISTEMA DE ARRASTAR A BOLHA PRINCIPAL (DRAG & DROP) ---
         const masterBubble = document.getElementById('masterBubble');
@@ -453,7 +465,7 @@
             const id = `scanner_${bubbleCounter}`;
             const saveAllBubbleWrapper = document.getElementById('saveAllBubbleWrapper');
             const taskViewGrid = document.getElementById('taskViewGrid');
-            const defaultName = file.name.substring(0, 22);
+            const shortFileTitle = file.name.substring(0, 22);
 
             bubbleState[id] = {
                 file: file,
@@ -461,14 +473,14 @@
                 isReading: true
             };
 
-            // 1. Cartão na grade central (Task View) com botão de SALVAR e Robozinho iniciando a leitura automaticamente
+            // 1. Cartão na grade central (Task View): Descrição / Fornecedor inicia VAZIO (sem o nome do arquivo)
             const cardHTML = `
                 <div id="${id}_modal" class="bubble-enter w-full bg-[#171038] border-2 border-indigo-600/50 rounded-2xl shadow-2xl p-5 text-xs flex flex-col justify-between transition-all">
                     <div>
                         <div class="flex justify-between items-center pb-2.5 border-b border-indigo-900/40 mb-3">
                             <div class="flex items-center space-x-2">
                                 <span id="${id}_robotStatus" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
-                                <span class="font-bold text-white truncate max-w-[200px]" title="${file.name}">Doc #${bubbleCounter}: ${defaultName}</span>
+                                <span class="font-bold text-white truncate max-w-[200px]" title="${file.name}">Doc #${bubbleCounter}: ${shortFileTitle}</span>
                             </div>
                             <div class="flex items-center space-x-1">
                                 <button type="button" onclick="window.toggleBubble('${id}', true)" class="w-6 h-6 rounded hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white font-bold cursor-pointer" title="Minimizar para bolha">_</button>
@@ -484,13 +496,13 @@
 
                             <div>
                                 <label class="text-[10px] text-slate-400 block mb-0.5">Descrição / Fornecedor</label>
-                                <input type="text" id="${id}_desc" required value="${defaultName}" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                <input type="text" id="${id}_desc" required value="" placeholder="Aguardando leitura OCR..." oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                             </div>
 
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="text-[10px] text-slate-400 block mb-0.5">Valor (R$)</label>
-                                    <input type="text" id="${id}_amount" placeholder="Aguardando OCR..." oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                    <input type="text" id="${id}_amount" placeholder="0,00" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                                 </div>
                                 <div>
                                     <label class="text-[10px] text-slate-400 block mb-0.5">Categoria</label>
@@ -508,7 +520,7 @@
                                 <input type="date" id="${id}_date" onchange="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                             </div>
 
-                            <!-- Botão da bolha agora é o botão de SALVAR -->
+                            <!-- Botão da bolha para Salvar no Google Sheets -->
                             <button type="submit" id="${id}_submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-xl font-semibold shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer active:scale-95 text-xs">
                                 <span>Salvar no Google Sheets</span>
                             </button>
@@ -543,7 +555,7 @@
             document.getElementById(`${id}_date`).valueAsDate = new Date();
             window[`${id}_actualFile`] = file;
 
-            // DISPARA AUTOMATICAMENTE O ENVIO DA IMAGEM PARA O N8N ASSIM QUE A BOLHA É CRIADA!
+            // DISPARA AUTOMATICAMENTE A LEITURA VIA SERVERLESS (update.js) ASSIM QUE A BOLHA ABRE
             window.autoReadDocumentOcr(id);
         }
 
@@ -641,7 +653,7 @@
             if (retryBtn) retryBtn.classList.add('hidden');
         };
 
-        // --- ENVIO AUTOMÁTICO DA IMAGEM PARA O N8N E PREENCHIMENTO ISOLADO DOS CAMPOS ---
+        // --- LEITURA AUTOMÁTICA DA IMAGEM VIA SERVERLESS (/api/update -> n8n) ---
         window.autoReadDocumentOcr = async function(id) {
             const file = window[`${id}_actualFile`];
             if (!file || !bubbleState[id]) return;
@@ -673,43 +685,37 @@
             if (robotStatus) robotStatus.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping";
             if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-[#0b071e] animate-ping";
 
-            // Envia a imagem binária tanto no campo 'file' quanto 'data' para compatibilidade total com qualquer nó Webhook do n8n
-            const formData = new FormData();
-            formData.append('instanceId', id);
-            formData.append('file', file, file.name);
-            formData.append('data', file, file.name);
-            formData.append('fileName', file.name);
-
             try {
-                const response = await fetch(WEBHOOK_N8N_URL, {
+                const base64Data = await fileToBase64(file);
+
+                // Chama a função serverless update.js na Vercel
+                const response = await fetch(API_OCR_UPDATE_URL, {
                     method: 'POST',
-                    mode: 'cors',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        instanceId: id,
+                        fileName: file.name,
+                        mimeType: file.type || 'image/jpeg',
+                        fileBase64: base64Data
+                    })
                 });
 
                 if (!response.ok) {
-                    throw new Error(`O Webhook n8n retornou erro HTTP ${response.status}.`);
+                    const errText = await response.text().catch(() => "");
+                    throw new Error(errText || `Erro HTTP ${response.status} em update.js`);
                 }
 
-                const textData = await response.text();
-                let rawResult = {};
-                try {
-                    rawResult = textData ? JSON.parse(textData) : {};
-                } catch (jsonErr) {
-                    throw new Error("O n8n respondeu, mas não retornou um JSON válido.");
-                }
-
-                // Suporta diferentes estruturas de retorno JSON do n8n (Array, objeto direto, output, data)
+                const rawResult = await response.json();
                 let result = Array.isArray(rawResult) ? rawResult[0] : rawResult;
                 if (result && result.data && typeof result.data === 'object') result = result.data;
                 if (result && result.output && typeof result.output === 'object') result = result.output;
 
                 if (!result || result.error) {
-                    throw new Error(result?.error || "O n8n não conseguiu extrair os dados deste documento.");
+                    throw new Error(result?.error || "O n8n não retornou os dados extraídos do documento.");
                 }
 
                 // Preenche automaticamente os campos da instância exata (id) sem misturar com outras bolhas
-                const vendorVal = result.vendor || result.description || result.fornecedor || result.estabelecimento || result.nome || result.emitente;
+                const vendorVal = result.vendor || result.description || result.fornecedor || result.estabelecimento || result.nome || result.emitente || result.descricao;
                 const amountVal = result.amount || result.valor || result.total || result.valor_total || result.value;
                 const categoryVal = result.category || result.categoria || result.tipo;
                 const dateVal = result.date || result.data || result.data_emissao || result.vencimento;
@@ -740,10 +746,7 @@
                 if (robotStatus) robotStatus.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
                 if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
             } catch (err) {
-                const msg = (err.message && err.message.includes('Failed to fetch'))
-                    ? "Falha de conexão com o n8n (Verifique se o Webhook está ativo e com CORS liberado)."
-                    : (err.message || "Falha ao ler documento no n8n.");
-                markBubbleRedError(id, msg);
+                markBubbleRedError(id, err.message || "Falha ao processar leitura via update.js.");
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
@@ -789,6 +792,7 @@
 
             return {
                 instanceId: id,
+                fileName: bubbleState[id].file ? bubbleState[id].file.name : "",
                 description: desc,
                 amount: amount,
                 category: category,
@@ -796,31 +800,29 @@
             };
         }
 
-        // --- BOTÃO DE SALVAR INDIVIDUAL (DENTRO DO CARTÃO DA BOLHA) ---
+        // --- BOTÃO DE SALVAR INDIVIDUAL VIA SERVERLESS (/api/salvar -> n8n) ---
         window.handleSingleSaveSubmit = async function(e, id) {
             e.preventDefault();
             const validItem = validateSingleBubble(id);
             if (!validItem) return;
 
             const submitBtn = document.getElementById(`${id}_submitBtn`);
-            const statusDiv = document.getElementById(`${id}_status`);
-            const statusText = document.getElementById(`${id}_statusText`);
 
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = `<span>🤖 Salvando no Google Sheets...</span>`;
+                submitBtn.innerHTML = `<span>🤖 Salvando via salvar.js...</span>`;
             }
 
             try {
-                const response = await fetch(WEBHOOK_N8N_SAVE_URL, {
+                const response = await fetch(API_SHEETS_SALVAR_URL, {
                     method: 'POST',
-                    mode: 'cors',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ items: [validItem] })
+                    body: JSON.stringify({ items: [validItem], ...validItem })
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Erro ao salvar no Google Sheets (Status ${response.status}). Nada foi enviado.`);
+                    const errText = await response.text().catch(() => "");
+                    throw new Error(errText || `Erro ao salvar (Status ${response.status}). Nada foi enviado.`);
                 }
 
                 const resData = await response.json().catch(() => ({}));
@@ -836,10 +838,7 @@
                 );
                 window.closeBubble(id);
             } catch (err) {
-                const msg = (err.message && err.message.includes('Failed to fetch'))
-                    ? "Erro de conexão ao salvar no n8n (CORS ou Webhook save-sheets inativo). Nada foi salvo."
-                    : (err.message || "Falha ao salvar no Google Sheets.");
-                markBubbleRedError(id, msg);
+                markBubbleRedError(id, err.message || "Falha ao salvar no Google Sheets via salvar.js.");
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
@@ -848,7 +847,7 @@
             }
         };
 
-        // --- BOLHA DE SALVAR TUDO NO GOOGLE SHEETS (ACIMA DO +) ---
+        // --- BOLHA DE SALVAR TUDO NO GOOGLE SHEETS VIA SERVERLESS (/api/salvar -> n8n) ---
         window.saveAllBubblesToSheets = async function() {
             const ids = Object.keys(bubbleState);
             if (ids.length === 0) return;
@@ -872,15 +871,15 @@
             }
 
             try {
-                const response = await fetch(WEBHOOK_N8N_SAVE_URL, {
+                const response = await fetch(API_SHEETS_SALVAR_URL, {
                     method: 'POST',
-                    mode: 'cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ items: batchItems })
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Erro ao salvar lote no Google Sheets (Status ${response.status}). Nada foi enviado.`);
+                    const errText = await response.text().catch(() => "");
+                    throw new Error(errText || `Erro ao salvar lote (Status ${response.status}). Nada foi enviado.`);
                 }
 
                 const resData = await response.json().catch(() => ({}));
@@ -898,11 +897,8 @@
                     window.closeBubble(item.instanceId);
                 });
             } catch (err) {
-                const msg = (err.message && err.message.includes('Failed to fetch'))
-                    ? "Erro de conexão ao salvar lote no n8n (CORS ou Webhook save-sheets inativo). Nada foi salvo."
-                    : (err.message || "Falha de conexão com o n8n ao tentar salvar no Google Sheets.");
                 ids.forEach(id => {
-                    markBubbleRedError(id, msg);
+                    markBubbleRedError(id, err.message || "Falha ao salvar lote no Google Sheets via salvar.js.");
                 });
                 window.openAllInTaskView();
             }
