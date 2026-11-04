@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMART POS - Fluxo de Caixa & Bolhas Flutuantes</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Carregamento do Chart.js -->
+    <!-- Carregamento do Chart.js original -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -167,3 +167,46 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-pink-100 font-medium">Tempo Médio OCR</span>
                         </div>
+                        <p class="text-2xl font-bold text-white">1.8s</p>
+                    </div>
+                    <div class="relative w-12 h-12 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-pink-300/30" fill="transparent"/>
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-white" stroke-dasharray="113" stroke-dashoffset="17" fill="transparent"/>
+                        </svg>
+                        <span class="absolute text-[10px] font-semibold text-white">85%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Section: Donut + Sales Analytics Chart -->
+            <div class="grid grid-cols-12 gap-6">
+                
+                <!-- Donut Chart Block -->
+                <div class="col-span-5 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-semibold text-white text-sm">Distribuição do Caixa</h3>
+                        <svg class="w-4 h-4 text-slate-400 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                    </div>
+
+                    <div class="flex justify-center items-center my-6">
+                        <div class="relative w-44 h-44 flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="40" stroke="#1c1836" stroke-width="12" fill="transparent"/>
+                                <circle cx="50" cy="50" r="40" stroke="#00f2fe" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="72.8" stroke-linecap="round" fill="transparent"/>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-xs text-slate-400 font-medium">Lucro Líquido</span>
+                                <span class="text-3xl font-bold text-white">71%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-2 border-t border-indigo-900/40 text-xs">
+                        <div class="flex justify-between text-slate-300">
+                            <span>Processados com Sucesso</span>
+                            <span class="font-bold text-white">128 docs</span>
+                        </div>
+                        <div class="flex justify-between text-slate-300">
+                            <span>Duplicados Ignorados</span>
+                            <span class="
