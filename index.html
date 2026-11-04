@@ -279,7 +279,7 @@
                 <span class="text-xl">🤖</span>
                 <div>
                     <h2 class="text-sm font-bold text-white">Central de Documentos OCR (Visão em Grade)</h2>
-                    <p class="text-[11px] text-slate-400">As imagens são enviadas automaticamente via Serverless (update.js) ao abrir e salvas via (salvar.js).</p>
+                    <p class="text-[11px] text-slate-400">As imagens são enviadas automaticamente ao abrir via Serverless (/api/upload) e salvas via (/api/salvar).</p>
                 </div>
             </div>
             <button type="button" onclick="window.minimizeAllToDashboard()" class="bg-indigo-600/40 hover:bg-indigo-600 border border-indigo-400/40 text-white px-4 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer">
@@ -327,24 +327,14 @@
     </div>
 
     <script>
-        // Rotas Serverless da Vercel (update.js para leitura OCR no n8n e salvar.js para salvar no Google Sheets)
-        const API_OCR_UPDATE_URL = "/api/update"; 
+        // Aponta para as Serverless Functions corretas (/api/upload e /api/salvar)
+        const API_OCR_UPLOAD_URL = "/api/upload"; 
         const API_SHEETS_SALVAR_URL = "/api/salvar";
 
         let bubbleCounter = 0;
         let activeScannersCount = 0;
         let isExpanded = false;
         const bubbleState = {};
-
-        // Converte o ficheiro para Base64 para envio limpo via Serverless (update.js) sem erro de multipart/CORS
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = err => reject(err);
-                reader.readAsDataURL(file);
-            });
-        }
 
         // --- SISTEMA DE ARRASTAR A BOLHA PRINCIPAL (DRAG & DROP) ---
         const masterBubble = document.getElementById('masterBubble');
@@ -392,7 +382,6 @@
             masterBubble.style.transition = 'all 0.2s ease';
         }
 
-        // Clique na bolha principal: alterna entre a visão em grade (Task View) e o Dashboard
         masterBubble.addEventListener('click', (e) => {
             if (hasMoved) return;
             const overlay = document.getElementById('taskViewOverlay');
@@ -473,7 +462,7 @@
                 isReading: true
             };
 
-            // 1. Cartão na grade central (Task View): Descrição / Fornecedor inicia VAZIO (sem o nome do arquivo)
+            // Descrição / Fornecedor inicia totalmente VAZIO (sem o nome do arquivo)
             const cardHTML = `
                 <div id="${id}_modal" class="bubble-enter w-full bg-[#171038] border-2 border-indigo-600/50 rounded-2xl shadow-2xl p-5 text-xs flex flex-col justify-between transition-all">
                     <div>
@@ -540,7 +529,7 @@
                 </div>
             `;
 
-            // 2. Mini-bolha na pilha lateral direita
+            // Mini-bolha na pilha lateral direita
             const miniBubbleHTML = `
                 <div id="${id}_wrapper" class="stack-item pointer-events-auto flex flex-col items-end mb-2 bubble-enter">
                     <div id="${id}_bubble" onclick="window.toggleBubble('${id}', false)" class="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative" title="Abrir Doc #${bubbleCounter}">
@@ -555,7 +544,7 @@
             document.getElementById(`${id}_date`).valueAsDate = new Date();
             window[`${id}_actualFile`] = file;
 
-            // DISPARA AUTOMATICAMENTE A LEITURA VIA SERVERLESS (update.js) ASSIM QUE A BOLHA ABRE
+            // DISPARA AUTOMATICAMENTE A LEITURA VIA /api/upload ASSIM QUE A BOLHA É CRIADA
             window.autoReadDocumentOcr(id);
         }
 
@@ -653,7 +642,7 @@
             if (retryBtn) retryBtn.classList.add('hidden');
         };
 
-        // --- LEITURA AUTOMÁTICA DA IMAGEM VIA SERVERLESS (/api/update -> n8n) ---
+        // --- LEITURA AUTOMÁTICA DA IMAGEM VIA /api/upload (Compatível com o seu upload.js) ---
         window.autoReadDocumentOcr = async function(id) {
             const file = window[`${id}_actualFile`];
             if (!file || !bubbleState[id]) return;
@@ -686,23 +675,20 @@
             if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-[#0b071e] animate-ping";
 
             try {
-                const base64Data = await fileToBase64(file);
+                // Utiliza FormData idêntico ao upload.js para enviar o binário stream
+                const formData = new FormData();
+                formData.append('instanceId', id);
+                formData.append('file', file, file.name);
+                formData.append('data', file, file.name);
 
-                // Chama a função serverless update.js na Vercel
-                const response = await fetch(API_OCR_UPDATE_URL, {
+                const response = await fetch(API_OCR_UPLOAD_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        instanceId: id,
-                        fileName: file.name,
-                        mimeType: file.type || 'image/jpeg',
-                        fileBase64: base64Data
-                    })
+                    body: formData
                 });
 
                 if (!response.ok) {
-                    const errText = await response.text().catch(() => "");
-                    throw new Error(errText || `Erro HTTP ${response.status} em update.js`);
+                    const errJson = await response.json().catch(() => ({}));
+                    throw new Error(errJson.message || errJson.error || `Erro HTTP ${response.status} ao comunicar com /api/upload`);
                 }
 
                 const rawResult = await response.json();
@@ -746,7 +732,7 @@
                 if (robotStatus) robotStatus.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
                 if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
             } catch (err) {
-                markBubbleRedError(id, err.message || "Falha ao processar leitura via update.js.");
+                markBubbleRedError(id, err.message || "Falha ao processar leitura via /api/upload.");
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
@@ -800,7 +786,7 @@
             };
         }
 
-        // --- BOTÃO DE SALVAR INDIVIDUAL VIA SERVERLESS (/api/salvar -> n8n) ---
+        // --- BOTÃO DE SALVAR INDIVIDUAL VIA /api/salvar (Compatível com o seu salvar.js) ---
         window.handleSingleSaveSubmit = async function(e, id) {
             e.preventDefault();
             const validItem = validateSingleBubble(id);
@@ -821,13 +807,13 @@
                 });
 
                 if (!response.ok) {
-                    const errText = await response.text().catch(() => "");
-                    throw new Error(errText || `Erro ao salvar (Status ${response.status}). Nada foi enviado.`);
+                    const errJson = await response.json().catch(() => ({}));
+                    throw new Error(errJson.message || errJson.error || `Erro ao salvar (Status ${response.status})`);
                 }
 
-                const resData = await response.json().catch(() => ({}));
-                if (resData && resData.error) {
-                    throw new Error(resData.error);
+                const resData = await response.json();
+                if (resData && resData.success === false) {
+                    throw new Error(resData.message || "Erro ao salvar no Google Sheets.");
                 }
 
                 addTransactionToTable(
@@ -838,7 +824,7 @@
                 );
                 window.closeBubble(id);
             } catch (err) {
-                markBubbleRedError(id, err.message || "Falha ao salvar no Google Sheets via salvar.js.");
+                markBubbleRedError(id, err.message || "Falha ao salvar no Google Sheets via /api/salvar.");
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
@@ -847,7 +833,7 @@
             }
         };
 
-        // --- BOLHA DE SALVAR TUDO NO GOOGLE SHEETS VIA SERVERLESS (/api/salvar -> n8n) ---
+        // --- BOLHA DE SALVAR TUDO NO GOOGLE SHEETS VIA /api/salvar ---
         window.saveAllBubblesToSheets = async function() {
             const ids = Object.keys(bubbleState);
             if (ids.length === 0) return;
@@ -864,7 +850,6 @@
                 }
             }
 
-            // Se qualquer bolha tiver erro, aborta o envio de todas e abre a grade mostrando os erros em vermelho
             if (hasAnyError) {
                 window.openAllInTaskView();
                 return;
@@ -878,13 +863,13 @@
                 });
 
                 if (!response.ok) {
-                    const errText = await response.text().catch(() => "");
-                    throw new Error(errText || `Erro ao salvar lote (Status ${response.status}). Nada foi enviado.`);
+                    const errJson = await response.json().catch(() => ({}));
+                    throw new Error(errJson.message || errJson.error || `Erro ao salvar lote (Status ${response.status})`);
                 }
 
-                const resData = await response.json().catch(() => ({}));
-                if (resData && resData.error) {
-                    throw new Error(resData.error);
+                const resData = await response.json();
+                if (resData && resData.success === false) {
+                    throw new Error(resData.message || "Erro ao salvar lote no Google Sheets.");
                 }
 
                 batchItems.forEach(item => {
@@ -898,7 +883,7 @@
                 });
             } catch (err) {
                 ids.forEach(id => {
-                    markBubbleRedError(id, err.message || "Falha ao salvar lote no Google Sheets via salvar.js.");
+                    markBubbleRedError(id, err.message || "Falha ao salvar lote via /api/salvar.");
                 });
                 window.openAllInTaskView();
             }
