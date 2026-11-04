@@ -9,7 +9,6 @@ export default async function handler(req, res) {
         return res.status(405).json({ message: 'Método não permitido. Use POST.' });
     }
 
-    // 🔴 1. TENS A CERTEZA QUE COLOCASTE A URL REAL AQUI? (Ex: https://n8n.labzratz.tech/webhook/...)
     const N8N_WEBHOOK_URL = 'https://n8n.labzratz.tech/webhook/upload-document'; 
 
     try {
@@ -31,12 +30,11 @@ export default async function handler(req, res) {
         return res.status(200).json(data);
 
     } catch (error) {
-        // 🔴 2. AQUI ESTÁ A MAGIA: Vamos mandar o erro real para a aba "Network/Rede" do teu navegador
-        console.error("Erro interno:", error);
+        console.error("Erro interno no upload:", error);
         return res.status(500).json({ 
             success: false, 
-            message: 'Erro no Vercel', 
-            erroReal: error.message // Isto vai mostrar se foi erro de URL, de Fetch, etc.
+            message: 'Erro no servidor de upload', 
+            erroReal: error.message 
         });
     }
 }
