@@ -1,25 +1,32 @@
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
+        return res.status(405).json({ message: 'Método não permitido. Use POST.' });
     }
 
-    const N8N_SAVE_WEBHOOK = process.env.N8N_SAVE_WEBHOOK_URL || "https://n8n.labzratz.tech/webhook-test/salvar-movimentacao";
+    const N8N_WEBHOOK_URL = 'https://n8n.labzratz.tech/webhook/salvar-movimentacao';
 
     try {
-        const response = await fetch(N8N_SAVE_WEBHOOK, {
+        const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify(req.body)
         });
 
-        const text = await response.text();
-        if (!response.ok) {
-            return res.status(response.status).json({ error: `n8n Salvar retornou status ${response.status}: ${text}` });
+        const contentType = n8nResponse.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            const textError = await n8nResponse.text();
+            console.error("Erro no n8n (não devolveu JSON):", textError);
+            return res.status(n8nResponse.status).json({ success: false, message: 'O servidor n8n falhou ou não retornou o formato correto.' });
         }
 
-        const data = text ? JSON.parse(text) : { success: true };
-        return res.status(200).json(data);
+        const data = await n8nResponse.json();
+        return res.status(n8nResponse.status).json(data);
+
     } catch (error) {
-        return res.status(500).json({ error: error.message || 'Erro interno no salvar.js ao comunicar com o n8n' });
+        console.error("Erro de comunicação entre Vercel e n8n:", error);
+        return res.status(500).json({ success: false, message: 'Falha de comunicação com o servidor n8n.' });
     }
 }
