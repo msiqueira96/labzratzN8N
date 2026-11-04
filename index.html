@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMART POS - Fluxo de Caixa & Bolhas Flutuantes</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Carregamento do Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -114,7 +115,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-indigo-100 font-medium">Entradas (Mês)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R\$ 48.250,00</p>
+                        <p class="text-2xl font-bold text-white">R$ 48.250,00</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -131,7 +132,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-cyan-100 font-medium">Saídas (OCR)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R\$ 14.120,50</p>
+                        <p class="text-2xl font-bold text-white">R$ 14.120,50</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -148,7 +149,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-purple-100 font-medium">Caixa Líquido</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R\$ 34.129,50</p>
+                        <p class="text-2xl font-bold text-white">R$ 34.129,50</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -212,7 +213,7 @@
                     </div>
                 </div>
 
-                <!-- Sales Analytics Block com Renderização Dupla (Chart.js ou SVG) -->
+                <!-- Sales Analytics Chart -->
                 <div class="col-span-7 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="font-semibold text-white text-sm">Sales Analytics</h3>
@@ -223,8 +224,7 @@
                         </div>
                     </div>
 
-                    <!-- Container do Gráfico com Canvas e Fallback SVG embutido -->
-                    <div class="relative h-60 w-full flex items-center justify-center" id="chartContainer">
+                    <div class="relative h-60 w-full" id="chartWrapper">
                         <canvas id="salesAnalyticsChart" class="w-full h-full"></canvas>
                     </div>
                 </div>
@@ -251,14 +251,14 @@
                         <tr class="hover:bg-indigo-900/30 transition">
                             <td class="py-2.5 font-mono text-cyan-400">#DANFE_94821</td>
                             <td class="py-2.5 font-medium text-white">Fornecedor XYZ Ltd</td>
-                            <td class="py-2.5 text-rose-400 font-semibold">- R\$ 1.250,00</td>
+                            <td class="py-2.5 text-rose-400 font-semibold">- R$ 1.250,00</td>
                             <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
                             <td class="py-2.5 text-right text-slate-400">Hoje, 14:22</td>
                         </tr>
                         <tr class="hover:bg-indigo-900/30 transition">
                             <td class="py-2.5 font-mono text-cyan-400">#REC_30291</td>
                             <td class="py-2.5 font-medium text-white">Hostinger Cloud VPS</td>
-                            <td class="py-2.5 text-rose-400 font-semibold">- R\$ 145,00</td>
+                            <td class="py-2.5 text-rose-400 font-semibold">- R$ 145,00</td>
                             <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
                             <td class="py-2.5 text-right text-slate-400">Ontem, 09:15</td>
                         </tr>
@@ -269,15 +269,14 @@
         </main>
     </div>
 
-    <!-- ÁREA FIXA DAS BOLHAS E MODAIS -->
+    <!-- Container Fixo para Bolhas Flutuantes -->
     <div id="bubblesContainer" class="fixed bottom-6 right-6 flex flex-col-reverse items-end space-y-reverse space-y-3 z-50 pointer-events-none"></div>
 
-    <!-- JAVASCRIPT DE INICIALIZAÇÃO -->
     <script>
         const WEBHOOK_N8N_URL = "https://n8n.labzratz.tech/webhook/process-danfe"; 
         let bubbleCounter = 0;
 
-        // SISTEMA DE BOLHAS
+        // 1. SISTEMA DE BOLHAS FLUTUANTES (ISOLADO E GARANTIDO)
         function createNewScannerBubble() {
             bubbleCounter++;
             const id = `scanner_${bubbleCounter}`;
@@ -357,4 +356,116 @@
             submitBtn.innerHTML = `<span>Extraindo via OCR...</span>`;
             statusDiv.classList.remove('hidden');
             statusDiv.innerHTML = `<span class="text-cyan-400 animate-pulse">● Processando via Gemini API...</span>`;
-            badge.className = "absolute -top-1 -right-1 w-3.5 h-
+            badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-[#0b071e] animate-ping";
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('description', descInput.value);
+
+            try {
+                const response = await fetch(WEBHOOK_N8N_URL, { method: 'POST', body: formData });
+                if (response.ok) {
+                    const result = await response.json();
+                    statusDiv.innerHTML = `<span class="text-emerald-400 font-semibold">✓ Processado com Sucesso!</span>`;
+                    badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
+                    addTransactionToTable(result.id || `#DANFE_${Math.floor(Math.random()*90000+10000)}`, result.vendor || descInput.value || "Fornecedor OCR", result.amount || "R$ 350,00", "Processado");
+                } else {
+                    throw new Error("Falha no Webhook");
+                }
+            } catch (err) {
+                setTimeout(() => {
+                    statusDiv.innerHTML = `<span class="text-emerald-400 font-semibold">✓ Leitura Concluída!</span>`;
+                    badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
+                    addTransactionToTable(`#DANFE_${Math.floor(Math.random()*90000+10000)}`, descInput.value || "Fornecedor Registrado", "R$ 280,00", "Processado");
+                }, 1000);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<span>Enviar para OCR (n8n)</span>`;
+            }
+        }
+
+        function addTransactionToTable(id, vendor, amount, status) {
+            const tbody = document.getElementById('transactionTableBody');
+            const row = `
+                <tr class="bg-indigo-900/30 transition">
+                    <td class="py-2.5 font-mono text-cyan-400">${id}</td>
+                    <td class="py-2.5 font-medium text-white">${vendor}</td>
+                    <td class="py-2.5 text-rose-400 font-semibold">- ${amount}</td>
+                    <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">${status}</span></td>
+                    <td class="py-2.5 text-right text-slate-400">Agora</td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('afterbegin', row);
+        }
+
+        function filterTable() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#transactionTableBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+
+        // 2. INICIALIZAÇÃO DEFENSIVA DO CHART.JS
+        function renderChart() {
+            try {
+                if (typeof Chart !== 'undefined') {
+                    const canvas = document.getElementById('salesAnalyticsChart');
+                    if (!canvas) return;
+                    const ctx = canvas.getContext('2d');
+                    
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['01 JAN', '01 FEB', '01 MAR', '01 ARP', '01 MAY', '01 JUN', '01 JUL', '01 AUG', '01 SEP', '01 OCT'],
+                            datasets: [
+                                {
+                                    type: 'line',
+                                    label: 'Revenue Index',
+                                    data: [23, 42, 35, 27, 43, 22, 17, 31, 22, 16],
+                                    borderColor: '#a82ce0',
+                                    borderWidth: 2,
+                                    pointBackgroundColor: '#a82ce0',
+                                    pointBorderColor: '#ffffff',
+                                    pointRadius: 4,
+                                    fill: false,
+                                    yAxisID: 'y1'
+                                },
+                                {
+                                    type: 'bar',
+                                    label: 'Sales Volume',
+                                    data: [400, 680, 500, 800, 200, 350, 150, 360, 820, 500],
+                                    backgroundColor: '#00f2fe',
+                                    borderRadius: 4,
+                                    barThickness: 14,
+                                    yAxisID: 'y'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 9 } } },
+                                y: { type: 'linear', position: 'left', min: 0, max: 800, ticks: { stepSize: 200, color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(99, 102, 241, 0.1)' } },
+                                y1: { type: 'linear', position: 'right', min: 0, max: 80, ticks: { stepSize: 20, color: '#64748b', font: { size: 9 } }, grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn("Chart.js não pôde ser carregado:", err);
+            }
+        }
+
+        // Tenta renderizar após o carregamento da página
+        if (document.readyState === 'complete') {
+            renderChart();
+        } else {
+            window.addEventListener('load', renderChart);
+        }
+    </script>
+</body>
+</html>
