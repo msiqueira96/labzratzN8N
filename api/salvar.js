@@ -3,7 +3,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const N8N_SAVE_WEBHOOK = process.env.N8N_SAVE_WEBHOOK_URL || "https://n8n.labzratz.tech/webhook/save-sheets";
+    const N8N_SAVE_WEBHOOK = process.env.N8N_SAVE_WEBHOOK_URL || "https://n8n.labzratz.tech/webhook-test/salvar-movimentacao";
 
     try {
         const response = await fetch(N8N_SAVE_WEBHOOK, {
