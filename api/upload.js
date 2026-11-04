@@ -3,7 +3,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const N8N_OCR_WEBHOOK = process.env.N8N_OCR_WEBHOOK_URL || "https://n8n.labzratz.tech/webhook/process-danfe";
+    const N8N_OCR_WEBHOOK = process.env.N8N_OCR_WEBHOOK_URL || "https://n8n.labzratz.tech/webhook-test/upload-document";
 
     try {
         const { instanceId, fileName, mimeType, fileBase64 } = req.body;
