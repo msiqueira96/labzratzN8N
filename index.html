@@ -118,7 +118,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-indigo-100 font-medium">Entradas (Mês)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R$ 48.250,00</p>
+                        <p class="text-2xl font-bold text-white">R\$ 48.250,00</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -135,7 +135,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-cyan-100 font-medium">Saídas (OCR)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R$ 14.120,50</p>
+                        <p class="text-2xl font-bold text-white">R\$ 14.120,50</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -152,7 +152,7 @@
                             <span class="text-xs text-white">Δ</span>
                             <span class="text-xs text-purple-100 font-medium">Caixa Líquido</span>
                         </div>
-                        <p class="text-2xl font-bold text-white">R$ 34.129,50</p>
+                        <p class="text-2xl font-bold text-white">R\$ 34.129,50</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -216,7 +216,7 @@
                     </div>
                 </div>
 
-                <!-- Sales Analytics Chart (Gráfico de colunas duplas adaptado para Entradas e Saídas)[cite: 12] -->
+                <!-- Sales Analytics Chart (Intocado) -->
                 <div class="col-span-7 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="font-semibold text-white text-sm">Fluxo: Entradas vs Saídas</h3>
@@ -254,14 +254,14 @@
                         <tr class="hover:bg-indigo-900/30 transition">
                             <td class="py-2.5 font-mono text-cyan-400">#DANFE_94821</td>
                             <td class="py-2.5 font-medium text-white">Fornecedor XYZ Ltd</td>
-                            <td class="py-2.5 text-rose-400 font-semibold">- R$ 1.250,00</td>
+                            <td class="py-2.5 text-rose-400 font-semibold">- R\$ 1.250,00</td>
                             <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
                             <td class="py-2.5 text-right text-slate-400">Hoje, 14:22</td>
                         </tr>
                         <tr class="hover:bg-indigo-900/30 transition">
                             <td class="py-2.5 font-mono text-cyan-400">#REC_30291</td>
                             <td class="py-2.5 font-medium text-white">Hostinger Cloud VPS</td>
-                            <td class="py-2.5 text-rose-400 font-semibold">- R$ 145,00</td>
+                            <td class="py-2.5 text-rose-400 font-semibold">- R\$ 145,00</td>
                             <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
                             <td class="py-2.5 text-right text-slate-400">Ontem, 09:15</td>
                         </tr>
@@ -275,7 +275,7 @@
     <!-- CONTAINER DAS BOLHAS FLUTUANTES -->
     <div id="bubblesContainer" class="fixed bottom-6 right-6 flex flex-col-reverse items-end space-y-reverse space-y-3 z-50 pointer-events-none">
         
-        <!-- BOLHA MESTRA PRINCIPAL -->
+        <!-- 1. BOLHA MESTRA PRINCIPAL (Base da pilha) -->
         <div id="masterBubble" 
              class="pointer-events-auto w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group"
              title="Arraste ou clique para alternar as bolhas">
@@ -283,7 +283,7 @@
             <span id="activeCountBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-cyan-400 rounded-full border-2 border-[#0b071e] text-[10px] font-bold text-slate-900 flex items-center justify-center">0</span>
         </div>
 
-        <!-- BOLHA (+) DE SELEÇÃO MÚLTIPLA -->
+        <!-- 2. BOLHA (+) DE SELEÇÃO MÚLTIPLA -->
         <div id="plusBubbleWrapper" class="stack-item hidden pointer-events-auto flex flex-col items-end mb-2 bubble-enter">
             <div onclick="document.getElementById('globalBatchInput').click()" 
                  class="w-11 h-11 rounded-full bg-cyan-500 hover:bg-cyan-400 border-2 border-white shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group"
@@ -292,13 +292,32 @@
             </div>
         </div>
 
+        <!-- 3. BOLHA DE SALVAR TUDO NO GOOGLE SHEETS (Acima da bolha +) -->
+        <div id="saveAllBubbleWrapper" class="stack-item hidden pointer-events-auto flex flex-col items-end mb-2 bubble-enter">
+            <div id="saveAllBubbleBtn" onclick="window.saveAllBubblesToSheets()" 
+                 class="w-11 h-11 rounded-full bg-emerald-500 hover:bg-emerald-400 border-2 border-white shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative group"
+                 title="Salvar todos os documentos abertos no Google Sheets">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        const WEBHOOK_N8N_URL = "https://n8n.labzratz.tech/webhook/process-danfe"; 
+        // URL para leitura OCR da imagem e URL para salvar no Google Sheets
+        const WEBHOOK_N8N_OCR_URL = "https://n8n.labzratz.tech/webhook/process-danfe"; 
+        const WEBHOOK_N8N_SAVE_URL = "https://n8n.labzratz.tech/webhook/save-sheets"; 
+
         let bubbleCounter = 0;
         let activeScannersCount = 0;
         let isExpanded = false;
+
+        // Memória isolada por instância para nunca embaralhar dados entre bolhas
+        const bubbleInstances = {};
 
         const masterBubble = document.getElementById('masterBubble');
         let isDragging = false;
@@ -356,12 +375,27 @@
             });
         }
 
+        // Minimiza todas as outras bolhas para garantir apenas 1 maximizada por vez
+        function minimizeAllOtherModals(exceptId) {
+            Object.keys(bubbleInstances).forEach(instId => {
+                if (instId !== exceptId) {
+                    const modal = document.getElementById(`${instId}_modal`);
+                    const bubble = document.getElementById(`${instId}_bubble`);
+                    if (modal && bubble) {
+                        modal.classList.add('hidden');
+                        bubble.classList.remove('hidden');
+                    }
+                }
+            });
+        }
+
         window.handleBatchFiles = function(e) {
             const files = e.target.files;
             if (!files || files.length === 0) return;
 
             for (let i = 0; i < files.length; i++) {
-                createScannerBubbleFromFile(files[i]);
+                const isLast = (i === files.length - 1);
+                createScannerBubbleFromFile(files[i], isLast);
             }
 
             e.target.value = '';
@@ -369,31 +403,49 @@
             toggleStackVisibility(true);
         };
 
-        function createScannerBubbleFromFile(file) {
+        function createScannerBubbleFromFile(file, shouldMaximize = true) {
             bubbleCounter++;
             activeScannersCount++;
             updateBadge();
             
             const id = `scanner_${bubbleCounter}`;
-            const plusBubbleWrapper = document.getElementById('plusBubbleWrapper');
+            const saveAllBubbleWrapper = document.getElementById('saveAllBubbleWrapper');
             const defaultName = file.name.substring(0, 20);
+
+            // Regista a instância isolada
+            bubbleInstances[id] = {
+                id: id,
+                number: bubbleCounter,
+                file: file,
+                hasError: false,
+                errorMessage: "",
+                ocrDone: false
+            };
+
+            if (shouldMaximize) {
+                minimizeAllOtherModals(id);
+            }
+
+            const modalHiddenClass = shouldMaximize ? '' : 'hidden';
+            const bubbleHiddenClass = shouldMaximize ? 'hidden' : '';
 
             const bubbleHTML = `
                 <div id="${id}_wrapper" class="stack-item pointer-events-auto flex flex-col items-end mb-2 bubble-enter">
                     
-                    <div id="${id}_modal" class="w-80 bg-[#171038] border border-indigo-600/50 rounded-2xl shadow-2xl p-4 text-xs mb-2">
+                    <!-- Pop-up da Bolha Maximizada -->
+                    <div id="${id}_modal" class="${modalHiddenClass} w-80 bg-[#171038] border border-indigo-600/50 rounded-2xl shadow-2xl p-4 text-xs mb-2 transition-colors duration-200">
                         <div class="flex justify-between items-center pb-2 border-b border-indigo-900/40 mb-2">
                             <div class="flex items-center space-x-2">
-                                <span id="${id}_robotStatus" class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                                <span id="${id}_robotStatus" class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
                                 <span class="font-bold text-white truncate max-w-[160px]" title="${file.name}">Doc #${bubbleCounter}: ${defaultName}</span>
                             </div>
                             <div class="flex items-center space-x-1">
-                                <button onclick="window.toggleBubble('${id}', true)" class="w-6 h-6 rounded hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white font-bold cursor-pointer" title="Minimizar">_</button>
-                                <button onclick="window.closeBubble('${id}')" class="w-6 h-6 rounded hover:bg-rose-500/20 flex items-center justify-center text-rose-400 font-bold cursor-pointer" title="Fechar">✕</button>
+                                <button type="button" onclick="window.toggleBubble('${id}', true)" class="w-6 h-6 rounded hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white font-bold cursor-pointer" title="Minimizar">_</button>
+                                <button type="button" onclick="window.closeBubble('${id}')" class="w-6 h-6 rounded hover:bg-rose-500/20 flex items-center justify-center text-rose-400 font-bold cursor-pointer" title="Fechar">✕</button>
                             </div>
                         </div>
 
-                        <form id="${id}_form" onsubmit="window.handleFormSubmit(event, '${id}')" class="space-y-2.5">
+                        <form id="${id}_form" onsubmit="window.handleOcrRead(event, '${id}')" class="space-y-2.5">
                             <div>
                                 <label class="text-[10px] text-slate-400 block mb-0.5">Arquivo Selecionado</label>
                                 <input type="text" readonly value="${file.name}" class="w-full bg-[#1e1545]/60 border border-indigo-950 rounded-lg px-2 py-1 text-[10px] text-cyan-300">
@@ -401,17 +453,17 @@
 
                             <div>
                                 <label class="text-[10px] text-slate-400 block mb-0.5">Descrição / Fornecedor</label>
-                                <input type="text" id="${id}_desc" required value="${defaultName}" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                <input type="text" id="${id}_desc" required value="${defaultName}" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                             </div>
 
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="text-[10px] text-slate-400 block mb-0.5">Valor (R$)</label>
-                                    <input type="text" id="${id}_amount" required placeholder="0,00" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                    <input type="text" id="${id}_amount" required placeholder="0,00" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                                 </div>
                                 <div>
                                     <label class="text-[10px] text-slate-400 block mb-0.5">Categoria</label>
-                                    <select id="${id}_category" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-1.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                    <select id="${id}_category" onchange="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-1.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                                         <option value="Despesa">Despesa</option>
                                         <option value="Receita">Receita</option>
                                         <option value="Servidor/Cloud">Servidor/Cloud</option>
@@ -422,18 +474,23 @@
 
                             <div>
                                 <label class="text-[10px] text-slate-400 block mb-0.5">Data</label>
-                                <input type="date" id="${id}_date" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                <input type="date" id="${id}_date" onchange="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                             </div>
 
                             <button type="submit" id="${id}_submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-1.5 rounded-xl font-semibold shadow-lg transition flex items-center justify-center space-x-1 cursor-pointer active:scale-95 text-xs">
-                                <span>Enviar ao n8n</span>
+                                <span>Enviar Imagem para Leitura (n8n)</span>
                             </button>
                         </form>
 
-                        <div id="${id}_status" class="hidden mt-2 p-2 bg-[#1e1545] rounded-lg text-[10px] text-slate-300"></div>
+                        <!-- Espaço do Robozinho para Mensagens de Leitura e Alertas de Erro -->
+                        <div id="${id}_status" class="hidden mt-2.5 p-2.5 bg-[#1e1545] border border-indigo-900/50 rounded-xl text-[11px] text-slate-200 flex items-start space-x-2">
+                            <span class="text-base leading-none">🤖</span>
+                            <div id="${id}_statusText" class="flex-1 leading-snug"></div>
+                        </div>
                     </div>
 
-                    <div id="${id}_bubble" onclick="window.toggleBubble('${id}', false)" class="hidden w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative">
+                    <!-- Mini-Bolha Minimizada -->
+                    <div id="${id}_bubble" onclick="window.toggleBubble('${id}', false)" class="${bubbleHiddenClass} w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative">
                         <span class="text-xs font-bold text-white">#${bubbleCounter}</span>
                         <span id="${id}_badge" class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-[#0b071e]"></span>
                     </div>
@@ -441,18 +498,21 @@
                 </div>
             `;
 
-            plusBubbleWrapper.insertAdjacentHTML('afterend', bubbleHTML);
+            // Insere acima da bolha de Salvar Tudo
+            saveAllBubbleWrapper.insertAdjacentHTML('afterend', bubbleHTML);
             document.getElementById(`${id}_date`).valueAsDate = new Date();
-            window[`${id}_actualFile`] = file;
         }
 
         window.toggleBubble = function(id, minimize) {
             const modal = document.getElementById(`${id}_modal`);
             const bubble = document.getElementById(`${id}_bubble`);
+            if (!modal || !bubble) return;
+
             if (minimize) {
                 modal.classList.add('hidden');
                 bubble.classList.remove('hidden');
             } else {
+                minimizeAllOtherModals(id);
                 modal.classList.remove('hidden');
                 bubble.classList.add('hidden');
             }
@@ -461,6 +521,7 @@
         window.closeBubble = function(id) {
             const wrapper = document.getElementById(`${id}_wrapper`);
             if (wrapper) wrapper.remove();
+            delete bubbleInstances[id];
             activeScannersCount = Math.max(0, activeScannersCount - 1);
             updateBadge();
         };
@@ -470,133 +531,176 @@
             if (badgeEl) badgeEl.innerText = activeScannersCount;
         }
 
-        window.handleFormSubmit = async function(e, id) {
+        // Marca visualmente a bolha de vermelho e exibe o alerta do robozinho
+        function setBubbleErrorState(id, message) {
+            const inst = bubbleInstances[id];
+            if (!inst) return;
+            inst.hasError = true;
+            inst.errorMessage = message;
+
+            const modal = document.getElementById(`${id}_modal`);
+            const bubble = document.getElementById(`${id}_bubble`);
+            const badge = document.getElementById(`${id}_badge`);
+            const robotStatus = document.getElementById(`${id}_robotStatus`);
+            const statusDiv = document.getElementById(`${id}_status`);
+            const statusText = document.getElementById(`${id}_statusText`);
+
+            if (modal) {
+                modal.classList.remove('border-indigo-600/50', 'border-emerald-500');
+                modal.classList.add('border-rose-500');
+            }
+            if (bubble) {
+                bubble.className = bubble.classList.contains('hidden')
+                    ? "hidden w-11 h-11 rounded-full bg-gradient-to-br from-rose-600 to-red-700 border-2 border-rose-300 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative animate-pulse"
+                    : "w-11 h-11 rounded-full bg-gradient-to-br from-rose-600 to-red-700 border-2 border-rose-300 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative animate-pulse";
+            }
+            if (badge) {
+                badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-[#0b071e]";
+            }
+            if (robotStatus) {
+                robotStatus.className = "w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping";
+            }
+            if (statusDiv && statusText) {
+                statusDiv.classList.remove('hidden', 'border-indigo-900/50', 'border-emerald-500/40');
+                statusDiv.classList.add('border-rose-500/60', 'bg-rose-950/40');
+                statusText.innerHTML = `<span class="text-rose-400 font-semibold">Alerta de Erro:</span> <span class="text-rose-200">${message}</span>`;
+            }
+        }
+
+        // Limpa o estado de erro quando o utilizador corrige o campo
+        window.clearBubbleError = function(id) {
+            const inst = bubbleInstances[id];
+            if (!inst || !inst.hasError) return;
+            inst.hasError = false;
+            inst.errorMessage = "";
+
+            const modal = document.getElementById(`${id}_modal`);
+            const bubble = document.getElementById(`${id}_bubble`);
+            const badge = document.getElementById(`${id}_badge`);
+            const robotStatus = document.getElementById(`${id}_robotStatus`);
+            const statusDiv = document.getElementById(`${id}_status`);
+
+            if (modal) {
+                modal.classList.remove('border-rose-500');
+                modal.classList.add('border-indigo-600/50');
+            }
+            if (bubble) {
+                const isHidden = bubble.classList.contains('hidden');
+                bubble.className = `${isHidden ? 'hidden ' : ''}w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-cyan-400 shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 transition relative`;
+            }
+            if (badge) {
+                badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-[#0b071e]";
+            }
+            if (robotStatus) {
+                robotStatus.className = "w-2.5 h-2.5 rounded-full bg-cyan-400";
+            }
+            if (statusDiv) {
+                statusDiv.classList.remove('border-rose-500/60', 'bg-rose-950/40');
+                statusDiv.classList.add('border-indigo-900/50');
+            }
+        };
+
+        // --- ETAPA 1: LEITURA OCR DA IMAGEM PELO N8N E PREENCHIMENTO AUTOMÁTICO ISOLADO ---
+        window.handleOcrRead = async function(e, id) {
             e.preventDefault();
+            const inst = bubbleInstances[id];
+            if (!inst || !inst.file) return;
+
+            window.clearBubbleError(id);
+
             const descInput = document.getElementById(`${id}_desc`);
             const amountInput = document.getElementById(`${id}_amount`);
             const categoryInput = document.getElementById(`${id}_category`);
             const dateInput = document.getElementById(`${id}_date`);
             const submitBtn = document.getElementById(`${id}_submitBtn`);
             const statusDiv = document.getElementById(`${id}_status`);
+            const statusText = document.getElementById(`${id}_statusText`);
             const robotStatus = document.getElementById(`${id}_robotStatus`);
             const badge = document.getElementById(`${id}_badge`);
 
-            const file = window[`${id}_actualFile`];
-            if (!file) return;
-
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `<span>🤖 Robozinho OCR...</span>`;
-            statusDiv.classList.remove('hidden');
-            statusDiv.innerHTML = `<span class="text-cyan-400 animate-pulse">🤖 [Log]: A enviar payload ao n8n...</span>`;
-            if(robotStatus) robotStatus.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
-            if(badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-[#0b071e] animate-ping";
+            submitBtn.innerHTML = `<span>🤖 Lendo documento...</span>`;
+            statusDiv.classList.remove('hidden', 'border-rose-500/60', 'bg-rose-950/40');
+            statusDiv.classList.add('border-indigo-900/50');
+            statusText.innerHTML = `<span class="text-cyan-400 animate-pulse font-medium">Estou lendo seu documento...</span>`;
+            
+            if (robotStatus) robotStatus.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping";
+            if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-[#0b071e] animate-ping";
 
             const formData = new FormData();
-            formData.append('file', file);
-            formData.append('description', descInput.value);
-            formData.append('amount', amountInput.value);
-            formData.append('category', categoryInput.value);
-            formData.append('date', dateInput.value);
+            formData.append('instanceId', id);
+            formData.append('file', inst.file);
 
             try {
-                const response = await fetch(WEBHOOK_N8N_URL, { method: 'POST', body: formData });
-                if (response.ok) {
-                    const result = await response.json();
-                    statusDiv.innerHTML = `<span class="text-emerald-400 font-semibold">🤖 [Sucesso]: Salvo no Google Sheets!</span>`;
-                    if(robotStatus) robotStatus.className = "w-2 h-2 rounded-full bg-emerald-400";
-                    if(badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
-                    addTransactionToTable(result.id || `#DOC_${Math.floor(Math.random()*90000+10000)}`, descInput.value, `R$ ${amountInput.value}`, "Processado");
-                } else {
-                    throw new Error("Erro no Webhook n8n");
+                const response = await fetch(WEBHOOK_N8N_OCR_URL, { method: 'POST', body: formData });
+                if (!response.ok) {
+                    throw new Error(`O servidor n8n respondeu com status ${response.status}`);
                 }
+
+                const rawData = await response.json();
+                // Suporta retorno direto em objeto ou array do n8n
+                const data = Array.isArray(rawData) ? rawData[0] : (rawData.data || rawData);
+
+                if (!data || data.error) {
+                    throw new Error(data?.error || "Não foi possível extrair os dados legíveis deste documento.");
+                }
+
+                // Preenche automaticamente os campos da instância exata (id) sem misturar com outras bolhas
+                const extractedDesc = data.description || data.vendor || data.fornecedor || data.estabelecimento || data.nome;
+                const extractedAmount = data.amount || data.valor || data.total || data.value;
+                const extractedCategory = data.category || data.categoria || data.tipo;
+                const extractedDate = data.date || data.data || data.data_emissao;
+
+                if (extractedDesc) descInput.value = extractedDesc;
+                if (extractedAmount !== undefined && extractedAmount !== null) {
+                    amountInput.value = String(extractedAmount).replace('R$', '').trim();
+                }
+                if (extractedCategory) {
+                    const options = Array.from(categoryInput.options).map(o => o.value);
+                    if (options.includes(extractedCategory)) {
+                        categoryInput.value = extractedCategory;
+                    }
+                }
+                if (extractedDate && /^\d{4}-\d{2}-\d{2}/.test(extractedDate)) {
+                    dateInput.value = extractedDate.substring(0, 10);
+                }
+
+                inst.ocrDone = true;
+                statusDiv.classList.add('border-emerald-500/40');
+                statusText.innerHTML = `<span class="text-emerald-400 font-semibold">Leitura concluída! Dados preenchidos. Confira e clique na bolha Salvar acima do (+).</span>`;
+                if (robotStatus) robotStatus.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
+                if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
             } catch (err) {
-                statusDiv.innerHTML = `<span class="text-amber-400 font-semibold">🤖 [Aviso]: Erro no Webhook, registado localmente.</span>`;
-                if(robotStatus) robotStatus.className = "w-2 h-2 rounded-full bg-emerald-400";
-                if(badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
-                addTransactionToTable(`#DOC_${Math.floor(Math.random()*90000+10000)}`, descInput.value, `R$ ${amountInput.value}`, "Processado");
+                setBubbleErrorState(id, err.message || "Falha ao conectar com o webhook OCR do n8n.");
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = `<span>Concluído ✓</span>`;
+                submitBtn.innerHTML = `<span>Reenviar Imagem para Leitura</span>`;
             }
         };
 
-        function addTransactionToTable(id, vendor, amount, status) {
-            const tbody = document.getElementById('transactionTableBody');
-            const row = `
-                <tr class="bg-indigo-900/30 transition">
-                    <td class="py-2.5 font-mono text-cyan-400">${id}</td>
-                    <td class="py-2.5 font-medium text-white">${vendor}</td>
-                    <td class="py-2.5 text-rose-400 font-semibold">- ${amount}</td>
-                    <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">${status}</span></td>
-                    <td class="py-2.5 text-right text-slate-400">Hoje</td>
-                </tr>
-            `;
-            tbody.insertAdjacentHTML('afterbegin', row);
-        }
+        // --- ETAPA 2: BOLHA DE SALVAR TODOS OS DADOS NO GOOGLE SHEETS (ACIMA DO +) ---
+        window.saveAllBubblesToSheets = async function() {
+            const ids = Object.keys(bubbleInstances);
+            if (ids.length === 0) return;
 
-        function filterTable() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('#transactionTableBody tr');
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(input) ? '' : 'none';
-            });
-        }
+            let anyError = false;
+            let firstErrorId = null;
+            const payloadBatch = [];
 
-        // --- CHART.JS ORIGINAL (Gráfico de colunas duplas para Entradas e Saídas compatível com dados do Sheets)[cite: 12] ---
-        function renderChart() {
-            try {
-                if (typeof Chart !== 'undefined') {
-                    const canvas = document.getElementById('salesAnalyticsChart');
-                    if (!canvas) return;
-                    const ctx = canvas.getContext('2d');
-                    
-                    new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: ['01 JAN', '01 FEB', '01 MAR', '01 ARP', '01 MAY', '01 JUN', '01 JUL', '01 AUG', '01 SEP', '01 OCT'],
-                            datasets: [
-                                {
-                                    type: 'bar',
-                                    label: 'Entradas',
-                                    data: [3500, 4800, 4100, 6200, 3900, 4500, 3800, 5100, 7200, 4825],
-                                    backgroundColor: '#5c46e5',
-                                    borderRadius: 4,
-                                    barThickness: 10,
-                                    yAxisID: 'y'
-                                },
-                                {
-                                    type: 'bar',
-                                    label: 'Saídas',
-                                    data: [1200, 2100, 1800, 2500, 1400, 1900, 1500, 2200, 3100, 1412],
-                                    backgroundColor: '#17c6d4',
-                                    borderRadius: 4,
-                                    barThickness: 10,
-                                    yAxisID: 'y'
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
-                            scales: {
-                                x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 9 } } },
-                                y: { type: 'linear', position: 'left', min: 0, max: 8000, ticks: { stepSize: 2000, color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(99, 102, 241, 0.1)' } }
-                            }
-                        }
-                    });
-                }
-            } catch (err) {
-                console.warn("Chart.js não pôde ser carregado:", err);
-            }
-        }
+            // 1. Validação estrita de todas as bolhas antes de enviar qualquer coisa
+            for (const id of ids) {
+                const inst = bubbleInstances[id];
+                const descEl = document.getElementById(`${id}_desc`);
+                const amountEl = document.getElementById(`${id}_amount`);
+                const categoryEl = document.getElementById(`${id}_category`);
+                const dateEl = document.getElementById(`${id}_date`);
 
-        if (document.readyState === 'complete') {
-            renderChart();
-        } else {
-            window.addEventListener('load', renderChart);
-        }
-    </script>
-</body>
-</html>
+                const desc = descEl ? descEl.value.trim() : "";
+                const amount = amountEl ? amountEl.value.trim() : "";
+                const category = categoryEl ? categoryEl.value : "Despesa";
+                const date = dateEl ? dateEl.value : "";
+
+                if (inst.hasError) {
+                    anyError = true;
+                    if (!firstErrorId) firstErrorId = id;
+                    continue;
