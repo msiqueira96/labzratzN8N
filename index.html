@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMART POS - Fluxo de Caixa & OCR n8n</title>
+    <title>SMART POS - Fluxo de Caixa & Scanner Flutuante</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,26 +12,23 @@
             font-family: 'Inter', sans-serif;
             background-color: #0b071e;
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        /* Animações suaves para as bolhas e modais */
+        .bubble-enter {
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #140d34;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #2e2268;
-            border-radius: 3px;
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
     </style>
 </head>
-<body class="text-slate-200 min-h-screen flex items-center justify-center p-4">
+<body class="text-slate-200 min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
 
-    <!-- Container Principal -->
-    <div class="w-full max-w-[1400px] bg-[#120c2d] border border-indigo-900/40 rounded-2xl shadow-2xl flex overflow-hidden">
+    <!-- Container Principal do Dashboard -->
+    <div class="w-full max-w-[1380px] bg-[#120c2d] border border-indigo-900/40 rounded-2xl shadow-2xl flex overflow-hidden">
         
         <!-- Sidebar -->
-        <aside class="w-64 bg-[#140d34] border-r border-indigo-900/30 flex flex-col justify-between p-6 shrink-0 hidden md:flex">
+        <aside class="w-64 bg-[#140d34] border-r border-indigo-900/30 flex flex-col justify-between p-6 shrink-0">
             <div>
                 <!-- Logo -->
                 <div class="flex items-center space-x-3 mb-8">
@@ -44,133 +41,83 @@
                 <!-- Campo de Pesquisa -->
                 <div class="mb-6 relative">
                     <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input type="text" id="searchInput" onkeyup="filterTransactions()" placeholder="Buscar transação ou CNPJ..." class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 placeholder-slate-500">
+                    <input type="text" id="searchInput" placeholder="Buscar lançamentos..." class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 placeholder-slate-500">
                 </div>
 
                 <!-- Menu de Navegação -->
                 <nav class="space-y-6 text-xs">
                     <div>
-                        <span class="text-slate-500 font-semibold uppercase tracking-wider text-[10px] block mb-3">Menu Principal</span>
+                        <span class="text-slate-500 font-semibold uppercase tracking-wider text-[10px] block mb-3">Menu</span>
                         <a href="#" class="flex items-center space-x-3 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-600/30">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                            <span>Dashboard Financeiro</span>
+                            <span>Dashboard</span>
                         </a>
                     </div>
 
                     <div>
-                        <span class="text-slate-500 font-semibold uppercase tracking-wider text-[10px] block mb-3">Automação OCR</span>
-                        <div class="space-y-2 text-slate-400">
-                            <a href="#upload-section" class="flex items-center space-x-3 px-4 py-1.5 hover:text-white transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="12" y2="12"></line><line x1="15" y1="15" x2="12" y2="12"></line></svg>
-                                <span>Enviar DANFE / Recibo</span>
-                            </a>
-                            <a href="#history-section" class="flex items-center space-x-3 px-4 py-1.5 hover:text-white transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                <span>Status da Pipeline</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <div>
-                        <span class="text-slate-500 font-semibold uppercase tracking-wider text-[10px] block mb-3">Integrações</span>
+                        <span class="text-slate-500 font-semibold uppercase tracking-wider text-[10px] block mb-3">Automação n8n</span>
                         <div class="space-y-2 text-slate-400">
                             <a href="#" class="flex items-center space-x-3 px-4 py-1.5 hover:text-white transition">
-                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                <span>Webhook n8n</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                <span>Recibos & DANFE</span>
                             </a>
                             <a href="#" class="flex items-center space-x-3 px-4 py-1.5 hover:text-white transition">
-                                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                                <span>Google Sheets</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path></svg>
+                                <span>Fluxo de Caixa</span>
                             </a>
                         </div>
                     </div>
                 </nav>
             </div>
 
-            <!-- Card Pipeline Status -->
+            <!-- Card Go Pro / Status Backend -->
             <div class="mt-8 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-4 text-center relative overflow-hidden shadow-lg">
                 <div class="flex justify-between items-start mb-2">
-                    <span class="font-bold text-sm text-white">n8n Pipeline</span>
-                    <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
+                    <span class="font-bold text-sm text-white">n8n Engine</span>
+                    <span class="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></span>
                 </div>
-                <p class="text-[10px] text-indigo-100 text-left mb-3">Conectado ao parser Gemini 1.5 & Tesseract OCR</p>
-                <button onclick="fetchDataFromN8n()" class="w-full bg-white/20 hover:bg-white/30 text-white py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-                    <span>Sincronizar Agora</span>
-                </button>
+                <p class="text-[10px] text-indigo-100 text-left mb-3">Tesseract OCR + Gemini AI Ativo</p>
+                <button onclick="createNewScannerBubble()" class="w-full bg-white/20 hover:bg-white/30 text-white py-1.5 rounded-lg text-xs font-semibold transition">+ Nova Leitura</button>
             </div>
         </aside>
 
         <!-- Main Content Area -->
-        <main class="flex-1 p-6 space-y-6 overflow-x-hidden custom-scrollbar">
+        <main class="flex-1 p-6 space-y-6 overflow-x-hidden">
 
             <!-- Top Header -->
-            <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
-                <div>
-                    <h1 class="text-xl font-semibold text-white">Dashboard Financeiro</h1>
-                    <p class="text-xs text-slate-400">Monitor de movimentações e processamento de documentos automatizado</p>
-                </div>
+            <header class="flex justify-between items-center mb-2">
+                <h1 class="text-xl font-semibold text-white">Dashboard Financeiro</h1>
                 
-                <div class="flex items-center space-x-3 bg-[#140d34] px-4 py-2 rounded-full border border-indigo-900/40">
-                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                    <div class="text-xs">
-                        <p class="font-semibold text-white">n8n Production Environment</p>
-                        <p class="text-[10px] text-slate-400" id="lastSyncText">Última checagem: Agora</p>
+                <div class="flex items-center space-x-4">
+                    <!-- Botão Principal de Nova Movimentação (Gera Bolha) -->
+                    <button onclick="createNewScannerBubble()" class="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-lg shadow-indigo-600/30">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>Nova Movimentação</span>
+                    </button>
+
+                    <div class="flex items-center space-x-3 bg-[#140d34] px-3 py-1.5 rounded-full border border-indigo-900/40">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-indigo-400">
+                        <div class="text-xs">
+                            <p class="font-semibold text-white flex items-center gap-1">
+                                Dev LabzRatz
+                                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </p>
+                            <p class="text-[10px] text-slate-400">ID 1252012</p>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <!-- Card de Envio de Documentos (Integração n8n) -->
-            <div id="upload-section" class="bg-[#171038] p-5 rounded-2xl border border-indigo-900/40 shadow-xl">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="font-semibold text-sm text-white flex items-center gap-2">
-                        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                        Processar Nova Movimentação (DANFE / Recibo PDF)
-                    </h2>
-                    <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-900/60 text-indigo-300 font-mono">POST /api/webhook/ocr</span>
-                </div>
-
-                <form id="ocrForm" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                    <div>
-                        <label class="block text-[11px] text-slate-400 mb-1">Descrição / Fornecedor</label>
-                        <input type="text" id="docDescription" required placeholder="Ex: NF Amazon Services" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] text-slate-400 mb-1">Tipo de Operação</label>
-                        <select id="docType" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-                            <option value="saida">Saída (Despesa / DANFE)</option>
-                            <option value="entrada">Entrada (Recebimento)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] text-slate-400 mb-1">Valor Estimado (R$)</label>
-                        <input type="number" step="0.01" id="docAmount" required placeholder="0.00" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium py-1.5 px-4 rounded-lg text-xs shadow-md transition flex items-center justify-center gap-2">
-                            <span id="btnText">Enviar para n8n</span>
-                            <div id="btnSpinner" class="hidden w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Status Feedback Banner -->
-                <div id="feedbackBanner" class="hidden mt-3 p-2.5 rounded-lg text-xs flex items-center justify-between">
-                    <span id="feedbackText"></span>
-                    <button onclick="document.getElementById('feedbackBanner').classList.add('hidden')" class="text-slate-400 hover:text-white">✕</button>
-                </div>
-            </div>
-
             <!-- 4 Top Cards Metric -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Card 1: Saldo Líquido -->
+            <div class="grid grid-cols-4 gap-4">
+                <!-- Card 1 -->
                 <div class="bg-[#5c46e5] p-4 rounded-2xl flex justify-between items-center shadow-lg relative overflow-hidden">
                     <div>
                         <div class="flex items-center space-x-1.5 mb-2">
                             <span class="text-xs text-white">Δ</span>
-                            <span class="text-xs text-indigo-100 font-medium">Saldo Líquido</span>
+                            <span class="text-xs text-indigo-100 font-medium">Entradas (Mês)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white" id="cardNetBalance">R$ 34.129,50</p>
+                        <p class="text-2xl font-bold text-white">R\$ 48.250,00</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
@@ -181,57 +128,57 @@
                     </div>
                 </div>
 
-                <!-- Card 2: Entradas Totais -->
+                <!-- Card 2 -->
                 <div class="bg-[#17c6d4] p-4 rounded-2xl flex justify-between items-center shadow-lg relative overflow-hidden">
                     <div>
                         <div class="flex items-center space-x-1.5 mb-2">
                             <span class="text-xs text-white">Δ</span>
-                            <span class="text-xs text-cyan-100 font-medium">Entradas Totais</span>
+                            <span class="text-xs text-cyan-100 font-medium">Saídas (OCR)</span>
                         </div>
-                        <p class="text-2xl font-bold text-white" id="cardTotalInflow">R$ 48.250,00</p>
+                        <p class="text-2xl font-bold text-white">R\$ 14.120,50</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
                             <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-cyan-300/30" fill="transparent"/>
                             <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-white" stroke-dasharray="113" stroke-dashoffset="17" fill="transparent"/>
                         </svg>
-                        <span class="absolute text-[10px] font-semibold text-white">92%</span>
+                        <span class="absolute text-[10px] font-semibold text-white">85%</span>
                     </div>
                 </div>
 
-                <!-- Card 3: Saídas / Despesas -->
+                <!-- Card 3 -->
                 <div class="bg-[#a82ce0] p-4 rounded-2xl flex justify-between items-center shadow-lg relative overflow-hidden">
                     <div>
                         <div class="flex items-center space-x-1.5 mb-2">
                             <span class="text-xs text-white">Δ</span>
-                            <span class="text-xs text-purple-100 font-medium">Saídas (DANFE/OCR)</span>
+                            <span class="text-xs text-purple-100 font-medium">Caixa Líquido</span>
                         </div>
-                        <p class="text-2xl font-bold text-white" id="cardTotalOutflow">R$ 14.120,50</p>
+                        <p class="text-2xl font-bold text-white">R\$ 34.129,50</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
                             <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-purple-300/30" fill="transparent"/>
-                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-white" stroke-dasharray="113" stroke-dashoffset="35" fill="transparent"/>
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-white" stroke-dasharray="113" stroke-dashoffset="17" fill="transparent"/>
                         </svg>
-                        <span class="absolute text-[10px] font-semibold text-white">68%</span>
+                        <span class="absolute text-[10px] font-semibold text-white">85%</span>
                     </div>
                 </div>
 
-                <!-- Card 4: Documentos Lidos -->
+                <!-- Card 4 -->
                 <div class="bg-[#e92c81] p-4 rounded-2xl flex justify-between items-center shadow-lg relative overflow-hidden">
                     <div>
                         <div class="flex items-center space-x-1.5 mb-2">
                             <span class="text-xs text-white">Δ</span>
-                            <span class="text-xs text-pink-100 font-medium">Docs Processados</span>
+                            <span class="text-xs text-pink-100 font-medium">Tempo Médio OCR</span>
                         </div>
-                        <p class="text-2xl font-bold text-white" id="cardDocCount">127</p>
+                        <p class="text-2xl font-bold text-white">1.8s</p>
                     </div>
                     <div class="relative w-12 h-12 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90">
                             <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-pink-300/30" fill="transparent"/>
                             <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-white" stroke-dasharray="113" stroke-dashoffset="17" fill="transparent"/>
                         </svg>
-                        <span class="absolute text-[10px] font-semibold text-white">100%</span>
+                        <span class="absolute text-[10px] font-semibold text-white">85%</span>
                     </div>
                 </div>
             </div>
@@ -240,9 +187,9 @@
             <div class="grid grid-cols-12 gap-6">
                 
                 <!-- Total Revenue Donut Chart Block -->
-                <div class="col-span-12 lg:col-span-5 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
+                <div class="col-span-5 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-semibold text-white text-sm">Proporção Entradas / Saídas</h3>
+                        <h3 class="font-semibold text-white text-sm">Distribuição do Caixa</h3>
                         <svg class="w-4 h-4 text-slate-400 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
                     </div>
 
@@ -253,31 +200,31 @@
                                 <circle cx="50" cy="50" r="40" stroke="#00f2fe" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="62.8" stroke-linecap="round" fill="transparent"/>
                             </svg>
                             <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                <span class="text-xs text-slate-400 font-medium">Margem</span>
-                                <span class="text-3xl font-bold text-white">77%</span>
+                                <span class="text-xs text-slate-400 font-medium">Lucro Líquido</span>
+                                <span class="text-3xl font-bold text-white">71%</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="space-y-2 pt-2 border-t border-indigo-900/40 text-xs">
                         <div class="flex justify-between text-slate-300">
-                            <span>Processamentos efetuados hoje</span>
-                            <span class="font-bold text-white" id="todaySalesText">R$ 1.250,00</span>
+                            <span>Processados com Sucesso</span>
+                            <span class="font-bold text-white">128 docs</span>
                         </div>
                         <div class="flex justify-between text-slate-300">
-                            <span>Média de despesas por recibo</span>
-                            <span class="font-bold text-white">R$ 336,20</span>
+                            <span>Duplicados Ignorados</span>
+                            <span class="font-bold text-white">3 docs</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Sales Analytics Chart Block -->
-                <div class="col-span-12 lg:col-span-7 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
+                <div class="col-span-7 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
                     <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-semibold text-white text-sm">Volume de Lançamentos Financeiros</h3>
+                        <h3 class="font-semibold text-white text-sm">Volume de Movimentações</h3>
                         <div class="flex bg-[#1f164b] p-1 rounded-lg text-[10px] space-x-1">
-                            <button class="px-2 py-1 text-slate-400 hover:text-white transition">Hoje</button>
-                            <button class="px-2 py-1 text-slate-400 hover:text-white transition">Semana</button>
+                            <button class="px-2 py-1 text-slate-400 hover:text-white transition">Diário</button>
+                            <button class="px-2 py-1 text-slate-400 hover:text-white transition">Semanal</button>
                             <button class="px-2 py-1 bg-pink-600 text-white rounded font-medium shadow">Mensal</button>
                         </div>
                     </div>
@@ -290,280 +237,20 @@
 
             </div>
 
-            <!-- Bottom Section: Tabela de Documentos Processados pelo n8n -->
-            <div id="history-section" class="bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 shadow-xl">
+            <!-- Bottom Section: Tabela de Transações Extraídas -->
+            <div class="bg-[#171038] p-5 rounded-2xl border border-indigo-900/30">
                 <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h3 class="font-semibold text-white text-sm">Histórico de Movimentações (Google Sheets & OCR)</h3>
-                        <p class="text-[11px] text-slate-400">Registros sincronizados via Webhook do n8n</p>
-                    </div>
-                    <button onclick="fetchDataFromN8n()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        Recarregar Tabela
-                    </button>
+                    <h3 class="font-semibold text-white text-sm">Documentos & Lançamentos Recentes</h3>
+                    <span class="text-[10px] text-emerald-400 font-mono">● Sincronizado via Google Sheets</span>
                 </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-slate-300">
-                        <thead class="text-[10px] text-slate-500 border-b border-indigo-900/40 uppercase">
-                            <tr>
-                                <th class="pb-3 font-medium">ID / Ref</th>
-                                <th class="pb-3 font-medium">Fornecedor / Descrição</th>
-                                <th class="pb-3 font-medium">Operação</th>
-                                <th class="pb-3 font-medium">Valor</th>
-                                <th class="pb-3 font-medium">Status n8n</th>
-                                <th class="pb-3 font-medium text-right">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionTableBody" class="divide-y divide-indigo-900/20 text-[11px]">
-                            <!-- Linha Exemplo 1 -->
-                            <tr class="hover:bg-slate-900/30 transition">
-                                <td class="py-3 font-mono text-cyan-400">#DANFE_94821</td>
-                                <td class="py-3 font-medium text-white">Fornecedor XYZ Comércio Ltda</td>
-                                <td class="py-3"><span class="px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded text-[9px]">Saída</span></td>
-                                <td class="py-3 font-semibold text-rose-400">- R$ 1.250,00</td>
-                                <td class="py-3"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">● OCR Gemini (200 OK)</span></td>
-                                <td class="py-3 text-right space-x-2">
-                                    <span class="inline-block w-2.5 h-2.5 bg-emerald-400 rounded-sm" title="Aprovado"></span>
-                                </td>
-                            </tr>
-                            <!-- Linha Exemplo 2 -->
-                            <tr class="hover:bg-slate-900/30 transition">
-                                <td class="py-3 font-mono text-cyan-400">#REC_30291</td>
-                                <td class="py-3 font-medium text-white">Hostinger Cloud VPS Server</td>
-                                <td class="py-3"><span class="px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded text-[9px]">Saída</span></td>
-                                <td class="py-3 font-semibold text-rose-400">- R$ 145,00</td>
-                                <td class="py-3"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">● OCR Tesseract (200 OK)</span></td>
-                                <td class="py-3 text-right space-x-2">
-                                    <span class="inline-block w-2.5 h-2.5 bg-emerald-400 rounded-sm" title="Aprovado"></span>
-                                </td>
-                            </tr>
-                            <!-- Linha Exemplo 3 -->
-                            <tr class="hover:bg-slate-900/30 transition">
-                                <td class="py-3 font-mono text-amber-400">#NF_00412</td>
-                                <td class="py-3 font-medium text-white">Serviço de Consultoria Tech</td>
-                                <td class="py-3"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px]">Entrada</span></td>
-                                <td class="py-3 font-semibold text-emerald-400">+ R$ 3.500,00</td>
-                                <td class="py-3"><span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded text-[9px] font-medium">▲ Duplicado Ignorado</span></td>
-                                <td class="py-3 text-right space-x-2">
-                                    <span class="inline-block w-2.5 h-2.5 bg-amber-500 rounded-sm" title="Revisão necessária"></span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <!-- Script de Integração com os Webhooks n8n -->
-    <script>
-        // CONFIGURAÇÃO DOS WEBHOOKS N8N
-        const N8N_CONFIG = {
-            WEBHOOK_POST_URL: 'https://labzratz-n8n.vercel.app/api/webhook/ocr', // Substitua pela sua URL real de envio
-            WEBHOOK_GET_URL: 'https://labzratz-n8n.vercel.app/api/webhook/data'   // Substitua pela sua URL real de consulta
-        };
-
-        // Submissão do Formulário de Movimentação para o n8n
-        async function handleFormSubmit(event) {
-            event.preventDefault();
-            
-            const submitBtn = document.getElementById('submitBtn');
-            const btnText = document.getElementById('btnText');
-            const btnSpinner = document.getElementById('btnSpinner');
-            const feedbackBanner = document.getElementById('feedbackBanner');
-            const feedbackText = document.getElementById('feedbackText');
-
-            const payload = {
-                description: document.getElementById('docDescription').value,
-                type: document.getElementById('docType').value,
-                amount: parseFloat(document.getElementById('docAmount').value),
-                timestamp: new Date().toISOString()
-            };
-
-            // UI Loading state
-            btnText.textContent = 'Enviando...';
-            btnSpinner.classList.remove('hidden');
-            submitBtn.disabled = true;
-
-            try {
-                const response = await fetch(N8N_CONFIG.WEBHOOK_POST_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    showFeedback('Documento enviado com sucesso para a pipeline do n8n!', 'success');
-                    // Adiciona localmente na tabela para resposta visual imediata
-                    addTransactionToTable({
-                        id: '#DOC_' + Math.floor(10000 + Math.random() * 90000),
-                        description: payload.description,
-                        type: payload.type,
-                        amount: payload.amount,
-                        status: '● Processado (n8n Webhook)',
-                        isSuccess: true
-                    });
-                    document.getElementById('ocrForm').reset();
-                } else {
-                    showFeedback(`Erro ao processar no n8n. Status: ${response.status}`, 'error');
-                }
-            } catch (error) {
-                console.warn('Simulação de envio local devido a CORS ou URL offline:', error);
-                // Fallback para teste visual
-                showFeedback('Servidor n8n notificado (Modo Simulação)', 'info');
-                addTransactionToTable({
-                    id: '#DOC_' + Math.floor(10000 + Math.random() * 90000),
-                    description: payload.description,
-                    type: payload.type,
-                    amount: payload.amount,
-                    status: '● Enviado (Simulação)',
-                    isSuccess: true
-                });
-                document.getElementById('ocrForm').reset();
-            } finally {
-                btnText.textContent = 'Enviar para n8n';
-                btnSpinner.classList.add('hidden');
-                submitBtn.disabled = false;
-            }
-        }
-
-        // Adicionar nova linha dinamicamente na tabela
-        function addTransactionToTable(item) {
-            const tbody = document.getElementById('transactionTableBody');
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-slate-900/30 transition animate-pulse';
-
-            const isOutflow = item.type === 'saida';
-            const amountFormatted = (isOutflow ? '- R$ ' : '+ R$ ') + Math.abs(item.amount).toFixed(2);
-            const amountColor = isOutflow ? 'text-rose-400' : 'text-emerald-400';
-            const badgeColor = isOutflow ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400';
-
-            tr.innerHTML = `
-                <td class="py-3 font-mono text-cyan-400">${item.id}</td>
-                <td class="py-3 font-medium text-white">${item.description}</td>
-                <td class="py-3"><span class="px-2 py-0.5 ${badgeColor} rounded text-[9px]">${isOutflow ? 'Saída' : 'Entrada'}</span></td>
-                <td class="py-3 font-semibold ${amountColor}">${amountFormatted}</td>
-                <td class="py-3"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">${item.status}</span></td>
-                <td class="py-3 text-right space-x-2">
-                    <span class="inline-block w-2.5 h-2.5 bg-emerald-400 rounded-sm"></span>
-                </td>
-            `;
-
-            tbody.insertBefore(tr, tbody.firstChild);
-            setTimeout(() => tr.classList.remove('animate-pulse'), 2000);
-        }
-
-        // Exibir Banner de Feedback na UI
-        function showFeedback(message, type) {
-            const banner = document.getElementById('feedbackBanner');
-            const text = document.getElementById('feedbackText');
-            
-            banner.className = 'mt-3 p-2.5 rounded-lg text-xs flex items-center justify-between ';
-            if (type === 'success') {
-                banner.classList.add('bg-emerald-950', 'text-emerald-300', 'border', 'border-emerald-700');
-            } else if (type === 'error') {
-                banner.classList.add('bg-rose-950', 'text-rose-300', 'border', 'border-rose-700');
-            } else {
-                banner.classList.add('bg-indigo-950', 'text-indigo-300', 'border', 'border-indigo-700');
-            }
-
-            text.textContent = message;
-            banner.classList.remove('hidden');
-        }
-
-        // Buscar dados atualizados do n8n
-        async function fetchDataFromN8n() {
-            document.getElementById('lastSyncText').textContent = 'Sincronizando...';
-            try {
-                const response = await fetch(N8N_CONFIG.WEBHOOK_GET_URL);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.netBalance) document.getElementById('cardNetBalance').textContent = data.netBalance;
-                    if (data.totalInflow) document.getElementById('cardTotalInflow').textContent = data.totalInflow;
-                    if (data.totalOutflow) document.getElementById('cardTotalOutflow').textContent = data.totalOutflow;
-                    if (data.docCount) document.getElementById('cardDocCount').textContent = data.docCount;
-                }
-            } catch (err) {
-                console.log('Consulta n8n simulada.');
-            } finally {
-                const now = new Date();
-                document.getElementById('lastSyncText').textContent = 'Última checagem: ' + now.toLocaleTimeString();
-            }
-        }
-
-        // Filtro de busca na tabela
-        function filterTransactions() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('#transactionTableBody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? '' : 'none';
-            });
-        }
-
-        // Inicialização do Gráfico Sales Analytics
-        const ctx = document.getElementById('salesAnalyticsChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['01 JAN', '01 FEB', '01 MAR', '01 ARP', '01 MAY', '01 JUN', '01 JUL', '01 AUG', '01 SEP', '01 OCT'],
-                datasets: [
-                    {
-                        type: 'line',
-                        label: 'Índice de Entradas',
-                        data: [23, 42, 35, 27, 43, 22, 17, 31, 22, 16],
-                        borderColor: '#a82ce0',
-                        borderWidth: 2,
-                        pointBackgroundColor: '#a82ce0',
-                        pointBorderColor: '#ffffff',
-                        pointRadius: 4,
-                        fill: false,
-                        yAxisID: 'y1'
-                    },
-                    {
-                        type: 'bar',
-                        label: 'Volume de Despesas (DANFE)',
-                        data: [400, 680, 500, 800, 200, 350, 150, 360, 820, 500],
-                        backgroundColor: '#00f2fe',
-                        borderRadius: 4,
-                        barThickness: 14,
-                        yAxisID: 'y'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#64748b', font: { size: 9 } }
-                    },
-                    y: {
-                        type: 'linear',
-                        position: 'left',
-                        min: 0,
-                        max: 800,
-                        ticks: { stepSize: 200, color: '#64748b', font: { size: 9 } },
-                        grid: { color: 'rgba(99, 102, 241, 0.1)' }
-                    },
-                    y1: {
-                        type: 'linear',
-                        position: 'right',
-                        min: 0,
-                        max: 80,
-                        ticks: { stepSize: 20, color: '#64748b', font: { size: 9 } },
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="text-[10px] text-slate-500 border-b border-indigo-900/40">
+                        <tr>
+                            <th class="pb-2 font-medium">ID / Arquivo</th>
+                            <th class="pb-2 font-medium">Fornecedor / Origem</th>
+                            <th class="pb-2 font-medium">Valor</th>
+                            <th class="pb-2 font-medium">Status n8n</th>
+                            <th class="pb-2 font-medium text-right">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody" class="divide-y divide-indigo
