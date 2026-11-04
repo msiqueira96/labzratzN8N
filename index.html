@@ -22,7 +22,7 @@
         }
     </style>
 </head>
-<body class="text-slate-200 min-h-screen flex items-center justify-center p-4 relative overflow-x-hidden">
+<body class="text-slate-200 min-h-screen flex items-center justify-center p-4 relative">
 
     <!-- Container Principal do Dashboard -->
     <div class="w-full max-w-[1380px] bg-[#120c2d] border border-indigo-900/40 rounded-2xl shadow-2xl flex">
@@ -95,4 +95,107 @@
                     </button>
 
                     <div class="flex items-center space-x-3 bg-[#140d34] px-3 py-1.5 rounded-full border border-indigo-900/40">
-                        <img src="
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-indigo-400">
+                        <div class="text-xs">
+                            <p class="font-semibold text-white flex items-center gap-1">
+                                Dev LabzRatz
+                                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </p>
+                            <p class="text-[10px] text-slate-400">ID 1252012</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 4 Top Cards Metric -->
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-[#5c46e5] p-4 rounded-2xl flex justify-between items-center shadow-lg">
+                    <div>
+                        <div class="flex items-center space-x-1.5 mb-2">
+                            <span class="text-xs text-white">Δ</span>
+                            <span class="text-xs text-indigo-100 font-medium">Entradas (Mês)</span>
+                        </div>
+                        <p class="text-2xl font-bold text-white">R\$ 48.250,00</p>
+                    </div>
+                    <div class="relative w-12 h-12 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-indigo-400/30" fill="transparent"/>
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-white" stroke-dasharray="113" stroke-dashoffset="17" fill="transparent"/>
+                        </svg>
+                        <span class="absolute text-[10px] font-semibold text-white">85%</span>
+                    </div>
+                </div>
+
+                <div class="bg-[#17c6d4] p-4 rounded-2xl flex justify-between items-center shadow-lg">
+                    <div>
+                        <div class="flex items-center space-x-1.5 mb-2">
+                            <span class="text-xs text-white">Δ</span>
+                            <span class="text-xs text-cyan-100 font-medium">Saídas (OCR)</span>
+                        </div>
+                        <p class="text-2xl font-bold text-white">R\$ 14.120,50</p>
+                    </div>
+                    <div class="relative w-12 h-12 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-cyan-300/30" fill="transparent"/>
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-white" stroke-dasharray="113" stroke-dashoffset="17" fill="transparent"/>
+                        </svg>
+                        <span class="absolute text-[10px] font-semibold text-white">85%</span>
+                    </div>
+                </div>
+
+                <div class="bg-[#a82ce0] p-4 rounded-2xl flex justify-between items-center shadow-lg">
+                    <div>
+                        <div class="flex items-center space-x-1.5 mb-2">
+                            <span class="text-xs text-white">Δ</span>
+                            <span class="text-xs text-purple-100 font-medium">Caixa Líquido</span>
+                        </div>
+                        <p class="text-2xl font-bold text-white">R\$ 34.129,50</p>
+                    </div>
+                    <div class="relative w-12 h-12 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-purple-300/30" fill="transparent"/>
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-white" stroke-dasharray="113" stroke-dashoffset="17" fill="transparent"/>
+                        </svg>
+                        <span class="absolute text-[10px] font-semibold text-white">85%</span>
+                    </div>
+                </div>
+
+                <div class="bg-[#e92c81] p-4 rounded-2xl flex justify-between items-center shadow-lg">
+                    <div>
+                        <div class="flex items-center space-x-1.5 mb-2">
+                            <span class="text-xs text-white">Δ</span>
+                            <span class="text-xs text-pink-100 font-medium">Tempo Médio OCR</span>
+                        </div>
+                        <p class="text-2xl font-bold text-white">1.8s</p>
+                    </div>
+                    <div class="relative w-12 h-12 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-pink-300/30" fill="transparent"/>
+                            <circle cx="24" cy="24" r="18" stroke="currentColor" stroke-width="3" class="text-white" stroke-dasharray="113" stroke-dashoffset="17" fill="transparent"/>
+                        </svg>
+                        <span class="absolute text-[10px] font-semibold text-white">85%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Section: Donut + Sales Analytics Chart -->
+            <div class="grid grid-cols-12 gap-6">
+                
+                <!-- Donut Chart Block -->
+                <div class="col-span-5 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-semibold text-white text-sm">Distribuição do Caixa</h3>
+                        <svg class="w-4 h-4 text-slate-400 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                    </div>
+
+                    <div class="flex justify-center items-center my-6">
+                        <div class="relative w-44 h-44 flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="40" stroke="#1c1836" stroke-width="12" fill="transparent"/>
+                                <circle cx="50" cy="50" r="40" stroke="#00f2fe" stroke-width="12" stroke-dasharray="251.2" stroke-dashoffset="72.8" stroke-linecap="round" fill="transparent"/>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-xs text-slate-400 font-medium">Lucro Líquido</span>
+                                <span class="text-3xl font-bold text-white">71%</span>
+                            </div>
+                        </div>
