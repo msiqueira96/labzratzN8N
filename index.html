@@ -243,27 +243,24 @@
                 <table class="w-full text-left text-xs text-slate-300">
                     <thead class="text-[10px] text-slate-500 border-b border-indigo-900/40">
                         <tr>
-                            <th class="pb-2 font-medium">ID / Arquivo</th>
-                            <th class="pb-2 font-medium">Fornecedor / Origem</th>
-                            <th class="pb-2 font-medium">Valor</th>
-                            <th class="pb-2 font-medium">Status n8n</th>
-                            <th class="pb-2 font-medium text-right">Data</th>
+                            <th class="pb-2 font-medium">id</th>
+                            <th class="pb-2 font-medium">data</th>
+                            <th class="pb-2 font-medium">fornecedor</th>
+                            <th class="pb-2 font-medium">cnpj</th>
+                            <th class="pb-2 font-medium">Operador</th>
+                            <th class="pb-2 font-medium">forma de pagamento</th>
+                            <th class="pb-2 font-medium text-right">valor</th>
                         </tr>
                     </thead>
                     <tbody id="transactionTableBody" class="divide-y divide-indigo-900/20 text-[11px]">
                         <tr class="hover:bg-indigo-900/30 transition">
                             <td class="py-2.5 font-mono text-cyan-400">#DANFE_94821</td>
+                            <td class="py-2.5 text-slate-400">Hoje, 14:22</td>
                             <td class="py-2.5 font-medium text-white">Fornecedor XYZ Ltd</td>
-                            <td class="py-2.5 text-rose-400 font-semibold">- R$ 1.250,00</td>
-                            <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
-                            <td class="py-2.5 text-right text-slate-400">Hoje, 14:22</td>
-                        </tr>
-                        <tr class="hover:bg-indigo-900/30 transition">
-                            <td class="py-2.5 font-mono text-cyan-400">#REC_30291</td>
-                            <td class="py-2.5 font-medium text-white">Hostinger Cloud VPS</td>
-                            <td class="py-2.5 text-rose-400 font-semibold">- R$ 145,00</td>
-                            <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">Processado</span></td>
-                            <td class="py-2.5 text-right text-slate-400">Ontem, 09:15</td>
+                            <td class="py-2.5 font-mono text-slate-400">00.000.000/0001-00</td>
+                            <td class="py-2.5 text-slate-300">Admin</td>
+                            <td class="py-2.5 text-slate-300">Pix</td>
+                            <td class="py-2.5 text-rose-400 font-semibold text-right">- R$ 1.250,00</td>
                         </tr>
                     </tbody>
                 </table>
@@ -279,7 +276,7 @@
                 <span class="text-xl">🤖</span>
                 <div>
                     <h2 class="text-sm font-bold text-white">Central de Documentos OCR (Visão em Grade)</h2>
-                    <p class="text-[11px] text-slate-400">As imagens são enviadas automaticamente ao abrir via Serverless (/api/upload) e salvas via (/api/salvar).</p>
+                    <p class="text-[11px] text-slate-400">Preenchimento automático sincronizado com as colunas da planilha (id, data, fornecedor, cnpj, Operador, forma de pagamento, valor).</p>
                 </div>
             </div>
             <button type="button" onclick="window.minimizeAllToDashboard()" class="bg-indigo-600/40 hover:bg-indigo-600 border border-indigo-400/40 text-white px-4 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer">
@@ -327,7 +324,6 @@
     </div>
 
     <script>
-        // Aponta para as Serverless Functions corretas (/api/upload e /api/salvar)
         const API_OCR_UPLOAD_URL = "/api/upload"; 
         const API_SHEETS_SALVAR_URL = "/api/salvar";
 
@@ -462,7 +458,7 @@
                 isReading: true
             };
 
-            // Descrição / Fornecedor inicia totalmente VAZIO (sem o nome do arquivo)
+            // Formulário contendo exatamente as colunas da planilha: fornecedor, cnpj, operador, forma_pagamento, valor, data
             const cardHTML = `
                 <div id="${id}_modal" class="bubble-enter w-full bg-[#171038] border-2 border-indigo-600/50 rounded-2xl shadow-2xl p-5 text-xs flex flex-col justify-between transition-all">
                     <div>
@@ -477,40 +473,45 @@
                             </div>
                         </div>
 
-                        <form id="${id}_form" onsubmit="window.handleSingleSaveSubmit(event, '${id}')" class="space-y-2.5">
+                        <form id="${id}_form" onsubmit="window.handleSingleSaveSubmit(event, '${id}')" class="space-y-2">
                             <div>
                                 <label class="text-[10px] text-slate-400 block mb-0.5">Arquivo Enviado ao OCR</label>
-                                <input type="text" readonly value="${file.name}" class="w-full bg-[#1e1545]/60 border border-indigo-950 rounded-lg px-2.5 py-1.5 text-[10px] text-cyan-300">
-                            </div>
-
-                            <div>
-                                <label class="text-[10px] text-slate-400 block mb-0.5">Descrição / Fornecedor</label>
-                                <input type="text" id="${id}_desc" required value="" placeholder="Aguardando leitura OCR..." oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                <input type="text" readonly value="${file.name}" class="w-full bg-[#1e1545]/60 border border-indigo-950 rounded-lg px-2.5 py-1 text-[10px] text-cyan-300">
                             </div>
 
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label class="text-[10px] text-slate-400 block mb-0.5">Valor (R$)</label>
-                                    <input type="text" id="${id}_amount" placeholder="0,00" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                    <label class="text-[10px] text-slate-400 block mb-0.5">Fornecedor</label>
+                                    <input type="text" id="${id}_fornecedor" required value="" placeholder="Aguardando OCR..." oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                                 </div>
                                 <div>
-                                    <label class="text-[10px] text-slate-400 block mb-0.5">Categoria</label>
-                                    <select id="${id}_category" onchange="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
-                                        <option value="Despesa">Despesa</option>
-                                        <option value="Receita">Receita</option>
-                                        <option value="Servidor/Cloud">Servidor/Cloud</option>
-                                        <option value="Insumos">Insumos</option>
-                                    </select>
+                                    <label class="text-[10px] text-slate-400 block mb-0.5">CNPJ</label>
+                                    <input type="text" id="${id}_cnpj" value="" placeholder="00.000.000/0001-00" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label class="text-[10px] text-slate-400 block mb-0.5">Operador</label>
+                                    <input type="text" id="${id}_operador" value="" placeholder="Nome" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 block mb-0.5">Forma Pagto</label>
+                                    <input type="text" id="${id}_forma_pagamento" value="" placeholder="Pix / Cartão" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 block mb-0.5">Valor (R$)</label>
+                                    <input type="text" id="${id}_valor" required placeholder="0,00" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                                 </div>
                             </div>
 
                             <div>
                                 <label class="text-[10px] text-slate-400 block mb-0.5">Data</label>
-                                <input type="date" id="${id}_date" onchange="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                <input type="date" id="${id}_data" onchange="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                             </div>
 
                             <!-- Botão da bolha para Salvar no Google Sheets -->
-                            <button type="submit" id="${id}_submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-xl font-semibold shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer active:scale-95 text-xs">
+                            <button type="submit" id="${id}_submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 rounded-xl font-semibold shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer active:scale-95 text-xs">
                                 <span>Salvar no Google Sheets</span>
                             </button>
                         </form>
@@ -541,7 +542,7 @@
 
             taskViewGrid.insertAdjacentHTML('beforeend', cardHTML);
             saveAllBubbleWrapper.insertAdjacentHTML('afterend', miniBubbleHTML);
-            document.getElementById(`${id}_date`).valueAsDate = new Date();
+            document.getElementById(`${id}_data`).valueAsDate = new Date();
             window[`${id}_actualFile`] = file;
 
             // DISPARA AUTOMATICAMENTE A LEITURA VIA /api/upload ASSIM QUE A BOLHA É CRIADA
@@ -642,7 +643,7 @@
             if (retryBtn) retryBtn.classList.add('hidden');
         };
 
-        // --- LEITURA AUTOMÁTICA DA IMAGEM VIA /api/upload (Compatível com o seu upload.js) ---
+        // --- LEITURA AUTOMÁTICA DA IMAGEM VIA /api/upload ---
         window.autoReadDocumentOcr = async function(id) {
             const file = window[`${id}_actualFile`];
             if (!file || !bubbleState[id]) return;
@@ -650,10 +651,13 @@
             window.clearBubbleError(id);
             bubbleState[id].isReading = true;
 
-            const descInput = document.getElementById(`${id}_desc`);
-            const amountInput = document.getElementById(`${id}_amount`);
-            const categoryInput = document.getElementById(`${id}_category`);
-            const dateInput = document.getElementById(`${id}_date`);
+            const fornecedorInput = document.getElementById(`${id}_fornecedor`);
+            const cnpjInput = document.getElementById(`${id}_cnpj`);
+            const operadorInput = document.getElementById(`${id}_operador`);
+            const formaPagamentoInput = document.getElementById(`${id}_forma_pagamento`);
+            const valorInput = document.getElementById(`${id}_valor`);
+            const dataInput = document.getElementById(`${id}_data`);
+            
             const submitBtn = document.getElementById(`${id}_submitBtn`);
             const statusDiv = document.getElementById(`${id}_status`);
             const statusText = document.getElementById(`${id}_statusText`);
@@ -675,7 +679,6 @@
             if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-[#0b071e] animate-ping";
 
             try {
-                // Utiliza FormData idêntico ao upload.js para enviar o binário stream
                 const formData = new FormData();
                 formData.append('instanceId', id);
                 formData.append('file', file, file.name);
@@ -700,26 +703,27 @@
                     throw new Error(result?.error || "O n8n não retornou os dados extraídos do documento.");
                 }
 
-                // Preenche automaticamente os campos da instância exata (id) sem misturar com outras bolhas
-                const vendorVal = result.vendor || result.description || result.fornecedor || result.estabelecimento || result.nome || result.emitente || result.descricao;
-                const amountVal = result.amount || result.valor || result.total || result.valor_total || result.value;
-                const categoryVal = result.category || result.categoria || result.tipo;
-                const dateVal = result.date || result.data || result.data_emissao || result.vencimento;
+                // Preenchimento sincronizado com as colunas exatas da planilha
+                const fornecedorVal = result.fornecedor || result.vendor || result.description || result.estabelecimento || result.nome || result.emitente;
+                const cnpjVal = result.cnpj || result.documento;
+                const operadorVal = result.operador || result.user || result.atendente;
+                const formaPagtoVal = result.forma_de_pagamento || result.formaPagamento || result.pagamento || result.forma;
+                const valorVal = result.valor || result.amount || result.total || result.valor_total || result.value;
+                const dataVal = result.data || result.date || result.data_emissao || result.vencimento;
 
-                if (vendorVal && descInput) descInput.value = vendorVal;
-                if (amountVal !== undefined && amountVal !== null && amountInput) {
-                    amountInput.value = String(amountVal).replace('R$', '').trim();
+                if (fornecedorVal && fornecedorInput) fornecedorInput.value = fornecedorVal;
+                if (cnpjVal && cnpjInput) cnpjInput.value = cnpjVal;
+                if (operadorVal && operadorInput) operadorInput.value = operadorVal;
+                if (formaPagtoVal && formaPagamentoInput) formaPagamentoInput.value = formaPagtoVal;
+                if (valorVal !== undefined && valorVal !== null && valorInput) {
+                    valorInput.value = String(valorVal).replace('R$', '').trim();
                 }
-                if (categoryVal && categoryInput) {
-                    const opts = Array.from(categoryInput.options).map(o => o.value);
-                    if (opts.includes(categoryVal)) categoryInput.value = categoryVal;
-                }
-                if (dateVal && dateInput) {
-                    if (/^\d{4}-\d{2}-\d{2}/.test(dateVal)) {
-                        dateInput.value = dateVal.substring(0, 10);
-                    } else if (/^\d{2}\/\d{2}\/\d{4}/.test(dateVal)) {
-                        const parts = dateVal.substring(0, 10).split('/');
-                        dateInput.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                if (dataVal && dataInput) {
+                    if (/^\d{4}-\d{2}-\d{2}/.test(dataVal)) {
+                        dataInput.value = dataVal.substring(0, 10);
+                    } else if (/^\d{2}\/\d{2}\/\d{4}/.test(dataVal)) {
+                        const parts = dataVal.substring(0, 10).split('/');
+                        dataInput.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
                     }
                 }
 
@@ -741,7 +745,7 @@
             }
         };
 
-        // --- VALIDAÇÃO DE UMA BOLHA INDIVIDUAL ---
+        // --- VALIDAÇÃO DE UMA BOLHA INDIVIDUAL (COLUNAS EXATAS DA PLANILHA) ---
         function validateSingleBubble(id) {
             if (!bubbleState[id]) return null;
 
@@ -753,40 +757,46 @@
                 return null;
             }
 
-            const descInput = document.getElementById(`${id}_desc`);
-            const amountInput = document.getElementById(`${id}_amount`);
-            const categoryInput = document.getElementById(`${id}_category`);
-            const dateInput = document.getElementById(`${id}_date`);
+            const fornecedorInput = document.getElementById(`${id}_fornecedor`);
+            const cnpjInput = document.getElementById(`${id}_cnpj`);
+            const operadorInput = document.getElementById(`${id}_operador`);
+            const formaPagamentoInput = document.getElementById(`${id}_forma_pagamento`);
+            const valorInput = document.getElementById(`${id}_valor`);
+            const dataInput = document.getElementById(`${id}_data`);
 
-            const desc = descInput ? descInput.value.trim() : "";
-            const amount = amountInput ? amountInput.value.trim() : "";
-            const category = categoryInput ? categoryInput.value : "Despesa";
-            const date = dateInput ? dateInput.value : "";
+            const fornecedor = fornecedorInput ? fornecedorInput.value.trim() : "";
+            const cnpj = cnpjInput ? cnpjInput.value.trim() : "";
+            const operador = operadorInput ? operadorInput.value.trim() : "";
+            const forma_pagamento = formaPagamentoInput ? formaPagamentoInput.value.trim() : "";
+            const valor = valorInput ? valorInput.value.trim() : "";
+            const data = dataInput ? dataInput.value : "";
 
-            if (!desc) {
-                markBubbleRedError(id, "O campo Descrição / Fornecedor está vazio.");
+            if (!fornecedor) {
+                markBubbleRedError(id, "O campo Fornecedor é obrigatório.");
                 return null;
             }
-            if (!amount || amount === "0,00" || amount === "0") {
-                markBubbleRedError(id, "O Valor (R$) está vazio ou inválido.");
+            if (!valor || valor === "0,00" || valor === "0") {
+                markBubbleRedError(id, "O Valor é obrigatório.");
                 return null;
             }
-            if (!date) {
-                markBubbleRedError(id, "A Data está vazia.");
+            if (!data) {
+                markBubbleRedError(id, "A Data é obrigatória.");
                 return null;
             }
 
             return {
                 instanceId: id,
                 fileName: bubbleState[id].file ? bubbleState[id].file.name : "",
-                description: desc,
-                amount: amount,
-                category: category,
-                date: date
+                fornecedor: fornecedor,
+                cnpj: cnpj,
+                operador: operador,
+                forma_pagamento: forma_pagamento,
+                valor: valor,
+                data: data
             };
         }
 
-        // --- BOTÃO DE SALVAR INDIVIDUAL VIA /api/salvar (Compatível com o seu salvar.js) ---
+        // --- BOTÃO DE SALVAR INDIVIDUAL VIA /api/salvar ---
         window.handleSingleSaveSubmit = async function(e, id) {
             e.preventDefault();
             const validItem = validateSingleBubble(id);
@@ -796,7 +806,7 @@
 
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = `<span>🤖 Salvando via salvar.js...</span>`;
+                submitBtn.innerHTML = `<span>🤖 Salvando...</span>`;
             }
 
             try {
@@ -818,9 +828,12 @@
 
                 addTransactionToTable(
                     `#DANFE_${Math.floor(Math.random()*90000+10000)}`,
-                    validItem.description,
-                    `R$ ${validItem.amount}`,
-                    "Processado"
+                    validItem.data,
+                    validItem.fornecedor,
+                    validItem.cnpj,
+                    validItem.operador,
+                    validItem.forma_pagamento,
+                    `R$ ${validItem.valor}`
                 );
                 window.closeBubble(id);
             } catch (err) {
@@ -833,7 +846,7 @@
             }
         };
 
-        // --- BOLHA DE SALVAR TUDO NO GOOGLE SHEETS VIA /api/salvar ---
+        // --- BOLHA DE SALVAR TUDO NO GOOGLE SHEETS ---
         window.saveAllBubblesToSheets = async function() {
             const ids = Object.keys(bubbleState);
             if (ids.length === 0) return;
@@ -875,9 +888,12 @@
                 batchItems.forEach(item => {
                     addTransactionToTable(
                         `#DANFE_${Math.floor(Math.random()*90000+10000)}`,
-                        item.description,
-                        `R$ ${item.amount}`,
-                        "Processado"
+                        item.data,
+                        item.fornecedor,
+                        item.cnpj,
+                        item.operador,
+                        item.forma_pagamento,
+                        `R$ ${item.valor}`
                     );
                     window.closeBubble(item.instanceId);
                 });
@@ -889,15 +905,17 @@
             }
         };
 
-        function addTransactionToTable(id, vendor, amount, status) {
+        function addTransactionToTable(id, data, fornecedor, cnpj, operador, forma_pagamento, valor) {
             const tbody = document.getElementById('transactionTableBody');
             const row = `
                 <tr class="bg-indigo-900/30 transition">
                     <td class="py-2.5 font-mono text-cyan-400">${id}</td>
-                    <td class="py-2.5 font-medium text-white">${vendor}</td>
-                    <td class="py-2.5 text-rose-400 font-semibold">- ${amount}</td>
-                    <td class="py-2.5"><span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-medium">${status}</span></td>
-                    <td class="py-2.5 text-right text-slate-400">Agora</td>
+                    <td class="py-2.5 text-slate-400">${data}</td>
+                    <td class="py-2.5 font-medium text-white">${fornecedor}</td>
+                    <td class="py-2.5 font-mono text-slate-400">${cnpj || '-'}</td>
+                    <td class="py-2.5 text-slate-300">${operador || '-'}</td>
+                    <td class="py-2.5 text-slate-300">${forma_pagamento || '-'}</td>
+                    <td class="py-2.5 text-rose-400 font-semibold text-right">- ${valor}</td>
                 </tr>
             `;
             tbody.insertAdjacentHTML('afterbegin', row);
