@@ -7,8 +7,6 @@ const CONFIG = {
     URL_ENTRADAS: 'https://script.google.com/macros/s/AKfycbwAhUmf0hZoMWHnyYTiMsO1cTdkfAHw0yKujYsjGnnIMwqiFAgxn3HLrGXJHqhRDluy/exec',
     URL_SAIDAS: 'https://script.google.com/macros/s/AKfycbzwFx41WOsrBhI9ydCNFSytfhfu47aL1yt0MVXYUDl4dPol4bjuHv10tYXks_LHSoDT/exec?aba=Saidas',
     URL_N8N_UPLOAD: '/api/upload',
-    
-    // Agora aponta para o Vercel, e o Vercel fala com o n8n
     URL_SALVAR: '/api/salvar' 
 };
 
@@ -122,8 +120,6 @@ const UI = {
         if (modal) {
             modal.classList.add('active');
             atualizarCamposFormulario();
-        } else {
-            console.error(`[Erro UI] Nenhum modal foi encontrado com o ID "${id}".`);
         }
     },
 
@@ -396,7 +392,6 @@ async function carregarDados() {
         UI.populateSelectFilters();
         aplicarFiltros();
     } catch (err) {
-        console.error("Erro ao carregar dados:", err);
         if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center p-20" style="color: red;">Erro ao carregar: ${err.message}</td></tr>`;
     }
 }
@@ -422,49 +417,36 @@ function limparCamposFormulario() {
 }
 
 function preencherCamposComIA(respostaIa) {
-    // Exibe na consola do navegador (F12) o objeto exato retornado pelo n8n
-    console.log("📥 Dados recebidos do n8n no Frontend:", respostaIa);
-
-    // 1. Desembrulha caso o n8n responda em formato de Array ou objetos aninhados
     let item = Array.isArray(respostaIa) ? respostaIa[0] : respostaIa;
 
     if (item && item.body) item = item.body;
     if (item && item.json) item = item.json;
     
-    // Corrigido: Apenas desembrulha item.data se for um objeto real (e não uma string de data como "2026-08-03")
     if (item && item.data && typeof item.data === 'object' && !Array.isArray(item.data)) {
         item = item.data;
     }
     
     if (item && item.output) item = item.output;
 
-    console.log("🔍 Objeto processado para preenchimento:", item);
-
     if (!item || typeof item !== 'object') {
-        console.warn("⚠️ Nenhum objeto válido encontrado para preencher os campos.");
         return;
     }
 
-    // Função auxiliar para atribuir valor e disparar eventos no DOM
     const setInputValue = (id, valor) => {
         const el = document.getElementById(id);
         if (el && valor !== undefined && valor !== null) {
             el.value = valor;
             el.dispatchEvent(new Event('input', { bubbles: true }));
             el.dispatchEvent(new Event('change', { bubbles: true }));
-        } else if (!el) {
-            console.warn(`⚠️ Elemento HTML com ID "${id}" não foi encontrado no DOM.`);
         }
     };
 
-    // 2. Tipo de Transação (Garante a troca para 'Saída' para exibir os campos corretos)
     const selectTipoTransacao = document.getElementById('formTipo');
     if (selectTipoTransacao) {
         selectTipoTransacao.value = item.tipoTransacao || item.tipo_transacao || 'Saída';
         atualizarCamposFormulario();
     }
 
-    // 3. Tipo de Documento
     const rawTipoDoc = item.tipoDocumento || item.tipo_documento || item.tipo;
     if (rawTipoDoc) {
         const selectTipoDoc = document.getElementById('tipoDocumento');
@@ -475,11 +457,9 @@ function preencherCamposComIA(respostaIa) {
         }
     }
 
-    // 4. ID / Nº do Pedido
     const valId = item.id ?? item.id_documento ?? item.idDocumento ?? item.pedido;
     setInputValue('saiId', valId ?? '');
 
-    // 5. Data de Emissão (Suporta AAAA-MM-DD e converte DD/MM/AAAA se necessário)
     const valData = item.data || item.data_emissao || item.dataEmissao || item.data_vencimento;
     if (valData) {
         let dataFormatada = String(valData).trim();
@@ -489,28 +469,23 @@ function preencherCamposComIA(respostaIa) {
                 dataFormatada = `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
             }
         } else if (dataFormatada.includes('-')) {
-            dataFormatada = dataFormatada.substring(0, 10); // Garante AAAA-MM-DD isolado de hora
+            dataFormatada = dataFormatada.substring(0, 10);
         }
         setInputValue('saiData', dataFormatada);
     }
 
-    // 6. Fornecedor
     const valFornecedor = item.fornecedor || item.nome_fornecedor || item.nomeFornecedor;
     setInputValue('saiFornecedor', valFornecedor ?? '');
 
-    // 7. CNPJ
     const valCnpj = item.cnpj || item.cnpj_fornecedor || item.cnpjFornecedor;
     setInputValue('saiCnpj', valCnpj ?? '');
 
-    // 8. Operador / Comprador
     const valOperador = item.operador || item.nome_comprador || item.comprador || item.representante;
     setInputValue('saiOperador', valOperador ?? '');
 
-    // 9. Forma de Pagamento
     const valFormaPgto = item.formaPagamento || item.forma_pagamento || item.formaPagto;
     setInputValue('saiFormaPagamento', valFormaPgto ?? '');
 
-    // 10. Valor Total
     const rawValor = item.valor ?? item.valor_pago ?? item.valorPago ?? item.valor_total ?? item.valorTotal;
     if (rawValor !== undefined && rawValor !== null) {
         let valTratado = rawValor;
@@ -590,7 +565,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('formTipo')?.addEventListener('change', atualizarCamposFormulario);
 
-    // Upload via IA (Modal de Lançamento)
     const btnTriggerAi = document.getElementById('btnTriggerAiUpload');
     const aiInput = document.getElementById('aiFileInput');
     const aiStatus = document.getElementById('aiUploadStatus');
@@ -618,7 +592,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Upload DANFE (Modal Independente)
     const fileDanfeInput = document.getElementById('arquivoDanfe');
     const fileContainer = document.getElementById('fileUploadContainer');
     const nameDisplay = document.getElementById('nomeArquivo');
@@ -658,7 +631,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Submissão do Formulário de Movimentação
     document.getElementById('formMovimentacao')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -671,7 +643,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnSalvar.innerText = 'Verificando e Salvando...';
             }
 
-            // Dispara para a sua nova rota no Vercel, que fará a ponte sem erro de CORS
             const res = await fetch(CONFIG.URL_SALVAR, {
                 method: 'POST',
                 headers: { 
@@ -686,20 +657,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const resposta = await res.json();
 
-            // Trata a resposta do n8n (caso o webhook retorne success: false por duplicidade)
             if (resposta.success === false) {
                 throw new Error(resposta.message || resposta.mensagem || 'Documento já cadastrado ou falha ao salvar.');
             }
 
             alert(resposta.message || resposta.mensagem || 'Movimentação gravada com sucesso!');
 
-            // Limpeza da interface
             document.getElementById('formMovimentacao').reset();
             const aiStatus = document.getElementById('aiUploadStatus');
             if (aiStatus) aiStatus.innerText = '';
             UI.closeModal('modalMovimentacao');
             
-            // Recarrega a tabela
             carregarDados();
 
         } catch (err) {
