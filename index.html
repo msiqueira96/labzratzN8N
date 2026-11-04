@@ -458,7 +458,7 @@
                 isReading: true
             };
 
-            // Formulário contendo exatamente as colunas da planilha: fornecedor, cnpj, operador, forma_pagamento, valor, data
+            // Formulário com o campo ID e todos os campos correspondentes à planilha
             const cardHTML = `
                 <div id="${id}_modal" class="bubble-enter w-full bg-[#171038] border-2 border-indigo-600/50 rounded-2xl shadow-2xl p-5 text-xs flex flex-col justify-between transition-all">
                     <div>
@@ -481,6 +481,17 @@
 
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
+                                    <label class="text-[10px] text-slate-400 block mb-0.5">ID (Código/Barras)</label>
+                                    <input type="text" id="${id}_id" value="" placeholder="Aguardando OCR..." oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-cyan-400 font-mono focus:outline-none focus:border-cyan-400">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 block mb-0.5">Data</label>
+                                    <input type="date" id="${id}_data" onchange="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
                                     <label class="text-[10px] text-slate-400 block mb-0.5">Fornecedor</label>
                                     <input type="text" id="${id}_fornecedor" required value="" placeholder="Aguardando OCR..." oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                                 </div>
@@ -493,21 +504,16 @@
                             <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label class="text-[10px] text-slate-400 block mb-0.5">Operador</label>
-                                    <input type="text" id="${id}_operador" value="" placeholder="Nome" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                    <input type="text" id="${id}_operador" value="" placeholder="Nome" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                                 </div>
                                 <div>
                                     <label class="text-[10px] text-slate-400 block mb-0.5">Forma Pagto</label>
-                                    <input type="text" id="${id}_forma_pagamento" value="" placeholder="Pix / Cartão" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                    <input type="text" id="${id}_forma_pagamento" value="" placeholder="Pix / Cartão" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                                 </div>
                                 <div>
                                     <label class="text-[10px] text-slate-400 block mb-0.5">Valor (R$)</label>
-                                    <input type="text" id="${id}_valor" required placeholder="0,00" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                                    <input type="text" id="${id}_valor" required placeholder="0,00" oninput="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                                 </div>
-                            </div>
-
-                            <div>
-                                <label class="text-[10px] text-slate-400 block mb-0.5">Data</label>
-                                <input type="date" id="${id}_data" onchange="window.clearBubbleError('${id}')" class="w-full bg-[#1e1545] border border-indigo-900/50 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
                             </div>
 
                             <!-- Botão da bolha para Salvar no Google Sheets -->
@@ -651,6 +657,7 @@
             window.clearBubbleError(id);
             bubbleState[id].isReading = true;
 
+            const idInput = document.getElementById(`${id}_id`);
             const fornecedorInput = document.getElementById(`${id}_fornecedor`);
             const cnpjInput = document.getElementById(`${id}_cnpj`);
             const operadorInput = document.getElementById(`${id}_operador`);
@@ -703,7 +710,8 @@
                     throw new Error(result?.error || "O n8n não retornou os dados extraídos do documento.");
                 }
 
-                // Preenchimento sincronizado com as colunas exatas da planilha
+                // Captura os dados do n8n (incluindo o id / código de barras para teste de duplicidade)
+                const idVal = result.id || result.codigo_barras || result.barcode || result.documento_id || `#DANFE_${Math.floor(Math.random()*90000+10000)}`;
                 const fornecedorVal = result.fornecedor || result.vendor || result.description || result.estabelecimento || result.nome || result.emitente;
                 const cnpjVal = result.cnpj || result.documento;
                 const operadorVal = result.operador || result.user || result.atendente;
@@ -711,6 +719,7 @@
                 const valorVal = result.valor || result.amount || result.total || result.valor_total || result.value;
                 const dataVal = result.data || result.date || result.data_emissao || result.vencimento;
 
+                if (idVal && idInput) idInput.value = idVal;
                 if (fornecedorVal && fornecedorInput) fornecedorInput.value = fornecedorVal;
                 if (cnpjVal && cnpjInput) cnpjInput.value = cnpjVal;
                 if (operadorVal && operadorInput) operadorInput.value = operadorVal;
@@ -731,7 +740,7 @@
                 if (statusDiv && statusText) {
                     statusDiv.className = "mt-3 p-2.5 bg-emerald-950/40 border border-emerald-500/50 rounded-xl text-[11px] text-emerald-300 flex items-center justify-between space-x-2";
                     statusText.className = "font-semibold";
-                    statusText.innerHTML = `Leitura concluída! Confira os dados e clique em Salvar.`;
+                    statusText.innerHTML = `Leitura concluída! ID e dados carregados.`;
                 }
                 if (robotStatus) robotStatus.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
                 if (badge) badge.className = "absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0b071e]";
@@ -745,7 +754,7 @@
             }
         };
 
-        // --- VALIDAÇÃO DE UMA BOLHA INDIVIDUAL (COLUNAS EXATAS DA PLANILHA) ---
+        // --- VALIDAÇÃO DE UMA BOLHA INDIVIDUAL (INCLUINDO ID) ---
         function validateSingleBubble(id) {
             if (!bubbleState[id]) return null;
 
@@ -757,6 +766,7 @@
                 return null;
             }
 
+            const idInput = document.getElementById(`${id}_id`);
             const fornecedorInput = document.getElementById(`${id}_fornecedor`);
             const cnpjInput = document.getElementById(`${id}_cnpj`);
             const operadorInput = document.getElementById(`${id}_operador`);
@@ -764,6 +774,7 @@
             const valorInput = document.getElementById(`${id}_valor`);
             const dataInput = document.getElementById(`${id}_data`);
 
+            const docId = idInput ? idInput.value.trim() : `#DANFE_${Math.floor(Math.random()*90000+10000)}`;
             const fornecedor = fornecedorInput ? fornecedorInput.value.trim() : "";
             const cnpj = cnpjInput ? cnpjInput.value.trim() : "";
             const operador = operadorInput ? operadorInput.value.trim() : "";
@@ -787,6 +798,7 @@
             return {
                 instanceId: id,
                 fileName: bubbleState[id].file ? bubbleState[id].file.name : "",
+                id: docId,
                 fornecedor: fornecedor,
                 cnpj: cnpj,
                 operador: operador,
@@ -827,7 +839,7 @@
                 }
 
                 addTransactionToTable(
-                    `#DANFE_${Math.floor(Math.random()*90000+10000)}`,
+                    validItem.id,
                     validItem.data,
                     validItem.fornecedor,
                     validItem.cnpj,
@@ -887,7 +899,7 @@
 
                 batchItems.forEach(item => {
                     addTransactionToTable(
-                        `#DANFE_${Math.floor(Math.random()*90000+10000)}`,
+                        item.id,
                         item.data,
                         item.fornecedor,
                         item.cnpj,
