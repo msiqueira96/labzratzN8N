@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMART POS - Fluxo de Caixa & Bolhas Flutuantes</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js 4.4.1 embutido via script de alta compatibilidade para Serverless -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous"></script>
+    <!-- Carregamento do Chart.js original -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -108,7 +108,7 @@
                 </div>
             </header>
 
-            <!-- 4 Top Cards Metric (Corrigido sem barra invertida) -->
+            <!-- 4 Top Cards Metric -->
             <div class="grid grid-cols-4 gap-4">
                 <div class="bg-[#5c46e5] p-4 rounded-2xl flex justify-between items-center shadow-lg">
                     <div>
@@ -214,7 +214,7 @@
                     </div>
                 </div>
 
-                <!-- Sales Analytics Chart (Chart.js Original Intocado) -->
+                <!-- Sales Analytics Chart -->
                 <div class="col-span-7 bg-[#171038] p-5 rounded-2xl border border-indigo-900/30 flex flex-col justify-between">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="font-semibold text-white text-sm">Sales Analytics</h3>
@@ -286,67 +286,8 @@
         let bubbleCounter = 0;
         let activeScannersCount = 0;
 
-        // --- SISTEMA DE ARRASTAR A BOLHA PRINCIPAL (DRAG & DROP) ---
-        const masterBubble = document.getElementById('masterBubble');
-        let isDragging = false;
-        let startX, startY, initialX, initialY;
-
-        masterBubble.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', dragEnd);
-
-        masterBubble.addEventListener('touchstart', dragStart);
-        document.addEventListener('touchmove', drag);
-        document.addEventListener('touchend', dragEnd);
-
-        function dragStart(e) {
-            isDragging = true;
-            startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-            startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-            const rect = masterBubble.getBoundingClientRect();
-            initialX = window.innerWidth - rect.right;
-            initialY = window.innerHeight - rect.bottom;
-            masterBubble.style.transition = 'none';
-        }
-
-        function drag(e) {
-            if (!isDragging) return;
-            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-            
-            const dx = startX - clientX;
-            const dy = startY - clientY;
-
-            masterBubble.style.right = `${initialX + dx}px`;
-            masterBubble.style.bottom = `${initialY + dy}px`;
-        }
-
-        function dragEnd() {
-            isDragging = false;
-            masterBubble.style.transition = 'all 0.2s ease';
-        }
-
-        masterBubble.addEventListener('click', () => {
-            if (activeScannersCount === 0) {
-                createNewScannerBubble();
-            } else {
-                const wrappers = document.querySelectorAll('[id\$="_wrapper"]');
-                wrappers.forEach(w => {
-                    const modal = w.querySelector('[id\$="_modal"]');
-                    const bubble = w.querySelector('[id\$="_bubble"]');
-                    if (modal.classList.contains('hidden')) {
-                        modal.classList.remove('hidden');
-                        bubble.classList.add('hidden');
-                    } else {
-                        modal.classList.add('hidden');
-                        bubble.classList.remove('hidden');
-                    }
-                });
-            }
-        });
-
-        // --- CRIAÇÃO DE NOVAS MOVIMENTAÇÕES (FORMULÁRIO COMPLETO PARA N8N) ---
-        function createNewScannerBubble() {
+        // --- DECLARAÇÃO GLOBAL IMEDIATA DAS FUNÇÕES DAS BOLHAS ---
+        window.createNewScannerBubble = function() {
             bubbleCounter++;
             activeScannersCount++;
             updateBadge();
@@ -421,7 +362,7 @@
             document.getElementById(`${id}_date`).valueAsDate = new Date();
         }
 
-        function toggleBubble(id, minimize) {
+        window.toggleBubble = function(id, minimize) {
             const modal = document.getElementById(`${id}_modal`);
             const bubble = document.getElementById(`${id}_bubble`);
             if (minimize) {
@@ -433,7 +374,7 @@
             }
         }
 
-        function closeBubble(id) {
+        window.closeBubble = function(id) {
             const wrapper = document.getElementById(`${id}_wrapper`);
             if (wrapper) wrapper.remove();
             activeScannersCount = Math.max(0, activeScannersCount - 1);
@@ -441,11 +382,71 @@
         }
 
         function updateBadge() {
-            document.getElementById('activeCountBadge').innerText = activeScannersCount;
+            const badgeEl = document.getElementById('activeCountBadge');
+            if (badgeEl) badgeEl.innerText = activeScannersCount;
         }
 
+        // --- SISTEMA DE ARRASTAR A BOLHA PRINCIPAL (DRAG & DROP) ---
+        const masterBubble = document.getElementById('masterBubble');
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
+
+        masterBubble.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        masterBubble.addEventListener('touchstart', dragStart);
+        document.addEventListener('touchmove', drag);
+        document.addEventListener('touchend', dragEnd);
+
+        function dragStart(e) {
+            isDragging = true;
+            startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            const rect = masterBubble.getBoundingClientRect();
+            initialX = window.innerWidth - rect.right;
+            initialY = window.innerHeight - rect.bottom;
+            masterBubble.style.transition = 'none';
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            
+            const dx = startX - clientX;
+            const dy = startY - clientY;
+
+            masterBubble.style.right = `${initialX + dx}px`;
+            masterBubble.style.bottom = `${initialY + dy}px`;
+        }
+
+        function dragEnd() {
+            isDragging = false;
+            masterBubble.style.transition = 'all 0.2s ease';
+        }
+
+        masterBubble.addEventListener('click', () => {
+            if (activeScannersCount === 0) {
+                createNewScannerBubble();
+            } else {
+                const wrappers = document.querySelectorAll('[id\$="_wrapper"]');
+                wrappers.forEach(w => {
+                    const modal = w.querySelector('[id\$="_modal"]');
+                    const bubble = w.querySelector('[id\$="_bubble"]');
+                    if (modal.classList.contains('hidden')) {
+                        modal.classList.remove('hidden');
+                        bubble.classList.add('hidden');
+                    } else {
+                        modal.classList.add('hidden');
+                        bubble.classList.remove('hidden');
+                    }
+                });
+            }
+        });
+
         // --- ENVIO COMPLETO PARA O N8N ---
-        async function handleFormSubmit(e, id) {
+        window.handleFormSubmit = async function(e, id) {
             e.preventDefault();
             const fileInput = document.getElementById(`${id}_file`);
             const descInput = document.getElementById(`${id}_desc`);
@@ -507,7 +508,7 @@
             tbody.insertAdjacentHTML('afterbegin', row);
         }
 
-        function filterTable() {
+        window.filterTable = function() {
             const input = document.getElementById('searchInput').value.toLowerCase();
             const rows = document.querySelectorAll('#transactionTableBody tr');
             rows.forEach(row => {
@@ -537,8 +538,4 @@
                                     borderWidth: 2,
                                     pointBackgroundColor: '#a82ce0',
                                     pointBorderColor: '#ffffff',
-                                    pointRadius: 4,
-                                    fill: false,
-                                    yAxisID: 'y1'
-                                },
-                                {
+                                    pointRadius
