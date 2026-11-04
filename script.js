@@ -184,4 +184,65 @@ const UI = {
         setTxt('kpiEntradas', Formatters.currency(totalEntradas));
         setTxt('kpiSaidas', Formatters.currency(totalSaidas));
         setTxt('kpiMaiorEntrada', Formatters.currency(maiorEntrada));
-        set
+        setTxt('kpiMaiorSaida', Formatters.currency(maiorSaida));
+        setTxt('kpiStatusSaldo', saldo >= 0 ? "Consolidado (Positivo)" : "Atenção (Negativo)");
+    },
+
+    populateSelectFilters() {
+        const fornecedores = [...new Set(STATE.transacoes.map(t => t.fornecedor).filter(Boolean))].sort();
+        const categorias = [...new Set(STATE.transacoes.map(t => t.categoria).filter(Boolean))].sort();
+
+        const selectForn = document.getElementById('headerFiltroFornecedor');
+        if (selectForn) {
+            const valAtual = selectForn.value;
+            selectForn.innerHTML = '<option value="Tudo">▼ Todos</option>' +
+                fornecedores.map(f => `<option value="${f}">${f}</option>`).join('');
+            if (fornecedores.includes(valAtual)) selectForn.value = valAtual;
+        }
+
+        const selectCat = document.getElementById('headerFiltroCategoria');
+        if (selectCat) {
+            const valCatAtual = selectCat.value;
+            selectCat.innerHTML = '<option value="Tudo">▼ Todas</option>' +
+                categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+            if (categorias.includes(valCatAtual)) selectCat.value = valCatAtual;
+        }
+    }
+};
+
+window.UI = UI;
+window.openModal = (id) => UI.openModal(id);
+window.closeModal = (id) => UI.closeModal(id);
+
+/**
+ * GRÁFICOS
+ */
+const ChartManager = {
+    destroyChart(key) {
+        if (STATE.charts[key]) {
+            STATE.charts[key].destroy();
+            STATE.charts[key] = null;
+        }
+    },
+
+    renderAll(dados) {
+        if (typeof Chart === 'undefined') return;
+        this.renderBars(dados);
+        this.renderCategoryDonut(dados);
+        this.renderProportionPie(dados);
+    },
+
+    renderBars(dados) {
+        const datasMap = {};
+        dados.forEach(d => {
+            if (!datasMap[d.data]) datasMap[d.data] = { e: 0, s: 0 };
+            if (d.tipo.toLowerCase().includes('entrada')) datasMap[d.data].e += d.valor;
+            else datasMap[d.data].s += d.valor;
+        });
+
+        const datas = Object.keys(datasMap).sort();
+        const arrEntradas = datas.map(d => datasMap[d].e);
+        const arrSaidas = datas.map(d => datasMap[d].s);
+        const labelsDatas = datas.map(d => Formatters.dateToBR(d));
+
+        this.destroyChart('
